@@ -16,7 +16,7 @@ public class Teleop extends LinearOpMode {
         robot.imu.resetYaw();
 
 
-        robot.setClawPosition(robot.close);
+
 
 
         double liftPower = -1;

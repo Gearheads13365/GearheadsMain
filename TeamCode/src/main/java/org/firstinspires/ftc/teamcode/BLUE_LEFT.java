@@ -15,7 +15,7 @@ public class BLUE_LEFT extends LinearOpMode {
         // THE GearHeadRobot CLASS!!
         robot.init();
 
-        robot.setClawPosition(robot.close);
+
 
         robot.imu.resetYaw();
 

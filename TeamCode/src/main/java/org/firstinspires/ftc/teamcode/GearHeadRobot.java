@@ -41,21 +41,17 @@ public class GearHeadRobot {
     private DcMotor RB = null;
     private DcMotor LF = null;
     private DcMotor RF = null;
-    private DcMotor LA = null;
-    private DcMotor RA = null;
-    private DcMotor LM = null;
+
+
+
 
     //Declare Servos
-    private Servo claw = null;
-    private CRServo w1 = null;
-    private CRServo w2 = null;
+
 
     //IMU Variables
     IMU imu;
 
-    //claw variables
-    public double open = 0.08;
-    public double close = 0.18;
+
 
     ////////////////////
     //Webcam Variables//
@@ -119,15 +115,11 @@ public class GearHeadRobot {
         RB = myOpMode.hardwareMap.get(DcMotor.class, "RB");
         LF = myOpMode.hardwareMap.get(DcMotor.class, "LF");
         RF = myOpMode.hardwareMap.get(DcMotor.class, "RF");
-        LA = myOpMode.hardwareMap.get(DcMotor.class, "LA");
-        RA = myOpMode.hardwareMap.get(DcMotor.class, "RA");
-        LM = myOpMode.hardwareMap.get(DcMotor.class, "LM");
+
 
 
         // Servo Hardware Map
-        claw = myOpMode.hardwareMap.get(Servo.class,"claw");
-        w1 = myOpMode.hardwareMap.get(CRServo.class,"w1");
-        w2 = myOpMode.hardwareMap.get(CRServo.class,"w2");
+
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -135,31 +127,18 @@ public class GearHeadRobot {
         RB.setDirection(DcMotor.Direction.FORWARD);
         LF.setDirection(DcMotor.Direction.REVERSE);
         RF.setDirection(DcMotor.Direction.FORWARD);
-        LA.setDirection(DcMotor.Direction.REVERSE);
-        RA.setDirection(DcMotor.Direction.FORWARD);
-        LM.setDirection(DcMotor.Direction.REVERSE);
-
-        w1.setDirection(DcMotorSimple.Direction.REVERSE);
-        w2.setDirection(DcMotorSimple.Direction.REVERSE);
-
 
         //Set the motors to run using encoders
         LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Set Motor Stop Method (Dont know if this is needed??? )
         LB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        LA.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RA.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        LM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         ////////////////////////
         //Webcam Initilization//
@@ -254,38 +233,12 @@ public class GearHeadRobot {
         return RF.getCurrentPosition();
     }
 
-// For encoder values on arms, lifts, other accessories (If you need a number for the position on any servo, use these methods)
 
 
-    public double GetArmPower()
-    {
-        return (LA.getPower() + RA.getPower())/2;
-    }
-    public int Get_Arm_Encoder()
-    {
-        return RA.getCurrentPosition();
-    }
-    public int Get_Lift_Encoder()
-    {
-        return LM.getCurrentPosition();
-    }
-    public int getArmEncoders(){
-        return RA.getCurrentPosition();
-    }
-    /////CLAW mutator and accessor methods ///
-    void setClawPosition(double position)   {claw.setPosition(position);}
-    double getClawPosition() {return claw.getPosition();}
 
 
   // SET ACCESORY POWERS ///////////////////////////////////////////////////////////////////////
-    void setLiftPower(double power)
-    {
-        LM.setPower(power);
-    }
-    public void setArmPower(double armPower){
-        LA.setPower(armPower);
-        RA.setPower(armPower);
-    }
+
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,50 +257,6 @@ public class GearHeadRobot {
 
 
 
-    public void moveArmDistance(double power, int distance, double EndPower) throws InterruptedException {
-
-        RA.setTargetPosition(distance);
-        RA.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
-        RA.setPower(power);
-        LA.setPower(power);
-
-
-        while (RA.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        RA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        RA.setPower(EndPower);
-        LA.setPower(EndPower);
-    }
-
-    public void moveLiftDistance(double power, int distance, double EndPower) throws InterruptedException {
-
-        LM.setTargetPosition(distance);
-        LM.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
-        LM.setPower(power);
-
-
-        while (LM.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        LM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        LM.setPower(0);
-    }
-
-    public double getLiftEncoder()
-    {
-        return LM.getCurrentPosition();
-    }
 
     public double getAprilTagPosition(int tagNumber){
 
