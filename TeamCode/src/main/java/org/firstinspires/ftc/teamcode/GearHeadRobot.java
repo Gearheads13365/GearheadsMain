@@ -72,10 +72,8 @@ public class GearHeadRobot {
     OpenCvCamera webcam;
 
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    SkystoneDeterminationPipeline_LeftTruss_MiddlePosition pipelineLTMP;
-    SkystoneDeterminationPipeline_LeftTruss_RightPosition pipelineLTRP;
-    SkystoneDeterminationPipeline_RightTruss_MiddlePosition pipelineRTMP;
-    SkystoneDeterminationPipeline_RightTruss_RightPosition pipelineRTRP;
+
+
 
     static final double FEET_PER_METER = 3.28084;
 
@@ -172,12 +170,6 @@ public class GearHeadRobot {
         webcam = OpenCvCameraFactory.getInstance().createWebcam(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-        pipelineLTMP = new SkystoneDeterminationPipeline_LeftTruss_MiddlePosition();
-        pipelineLTRP = new SkystoneDeterminationPipeline_LeftTruss_RightPosition();
-        pipelineRTMP = new SkystoneDeterminationPipeline_RightTruss_MiddlePosition();
-        pipelineRTRP = new SkystoneDeterminationPipeline_RightTruss_RightPosition();
-
-        webcam.setPipeline(pipelineLTRP);
 
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
@@ -231,6 +223,9 @@ public class GearHeadRobot {
     ////////////////////////////////////////////////////////////////////////
     //Methods - re-usable functions that can be called many times in main///
     ////////////////////////////////////////////////////////////////////////
+
+
+
 // This is where you will find functions like driving, moving lifts,getting values etc. to use in Teleop and Auto
 
     //Returns the average of the 4 drive motors (for reading positioning in Teleop)
@@ -260,6 +255,8 @@ public class GearHeadRobot {
     }
 
 // For encoder values on arms, lifts, other accessories (If you need a number for the position on any servo, use these methods)
+
+
     public double GetArmPower()
     {
         return (LA.getPower() + RA.getPower())/2;
@@ -279,126 +276,103 @@ public class GearHeadRobot {
     void setClawPosition(double position)   {claw.setPosition(position);}
     double getClawPosition() {return claw.getPosition();}
 
-// Lifting
+
+  // SET ACCESORY POWERS ///////////////////////////////////////////////////////////////////////
     void setLiftPower(double power)
     {
         LM.setPower(power);
     }
-
-// Icon Position used in CS
-    int getIconPosition(String RobotPosition) throws InterruptedException {
-
-        int BlueThreshold = 140;
-        int RedThreshold = 150;
-
-        if (RobotPosition == "BLUE_LEFT")
-        {
-            webcam.setPipeline(pipelineLTMP);
-            Thread.sleep(300);
-            double LT_MiddleBlue = pipelineLTMP.getAnalysisBLUE();
-
-            webcam.setPipeline(pipelineLTRP);
-            Thread.sleep(300);
-            double LT_RightBlue = pipelineLTRP.getAnalysisBLUE();
-
-            iconAnalysisMiddle = LT_MiddleBlue;
-            iconAnalysisRight = LT_RightBlue;
-
-            if (LT_MiddleBlue > BlueThreshold)
-            {
-                return 2;
-            }
-            else if (LT_RightBlue > BlueThreshold)
-            {
-                return 3;
-            }
-            else
-            {
-                return 1;
-            }
-        }
-        if (RobotPosition == "BLUE_RIGHT")
-        {
-            webcam.setPipeline(pipelineRTMP);
-            Thread.sleep(300);
-            double RT_MiddleBlue = pipelineRTMP.getAnalysisBLUE();
-
-            webcam.setPipeline(pipelineRTRP);
-            Thread.sleep(300);
-            double RT_RightBlue = pipelineRTRP.getAnalysisBLUE();
-
-            iconAnalysisMiddle = RT_MiddleBlue;
-            iconAnalysisRight = RT_RightBlue;
-
-            if (RT_MiddleBlue > BlueThreshold)
-            {
-                return 2;
-            }
-            else if (RT_RightBlue > BlueThreshold)
-            {
-                return 3;
-            }
-            else
-            {
-                return 1;
-            }
-        }
-        if (RobotPosition == "RED_LEFT")
-        {
-            webcam.setPipeline(pipelineLTMP);
-            Thread.sleep(300);
-            double LT_MiddleRed = pipelineLTMP.getAnalysisRED();
-
-            webcam.setPipeline(pipelineLTRP);
-            Thread.sleep(300);
-            double LT_RightRed = pipelineLTRP.getAnalysisRED();
-
-            iconAnalysisMiddle = LT_MiddleRed;
-            iconAnalysisRight = LT_RightRed;
-
-            if (LT_MiddleRed > RedThreshold)
-            {
-                return 5;
-            }
-            else if (LT_RightRed > RedThreshold)
-            {
-                return 6;
-            }
-            else
-            {
-                return 4;
-            }
-        }
-        if (RobotPosition == "RED_RIGHT")
-        {
-            webcam.setPipeline(pipelineRTMP);
-            Thread.sleep(300);
-            double RT_MiddleRed = pipelineRTMP.getAnalysisRED();
-
-            webcam.setPipeline(pipelineRTRP);
-            Thread.sleep(300);
-            double RT_RightRed = pipelineRTRP.getAnalysisRED();
-
-            iconAnalysisMiddle = RT_MiddleRed;
-            iconAnalysisRight = RT_RightRed;
-
-            if (RT_MiddleRed > RedThreshold)
-            {
-                return 5;
-            }
-            else if (RT_RightRed > RedThreshold)
-            {
-                return 6;
-            }
-            else
-            {
-                return 4;
-            }
-        }
-
-        return 0;
+    public void setArmPower(double armPower){
+        LA.setPower(armPower);
+        RA.setPower(armPower);
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // SetMecanumPower: This sets motor powers to the four wheels, allowing movement in teleop
+
+    public void setMecanumPower(double LeftF, double LeftB, double RightF, double RightB) {
+        LF.setPower(LeftF);
+        LB.setPower(LeftB);
+        RF.setPower(RightF);
+        RB.setPower(RightB);
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    public void moveArmDistance(double power, int distance, double EndPower) throws InterruptedException {
+
+        RA.setTargetPosition(distance);
+        RA.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        RA.setPower(power);
+        LA.setPower(power);
+
+
+        while (RA.isBusy()) ;
+        {
+            //wait until motors get to their target position
+        }
+
+        RA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        RA.setPower(EndPower);
+        LA.setPower(EndPower);
+    }
+
+    public void moveLiftDistance(double power, int distance, double EndPower) throws InterruptedException {
+
+        LM.setTargetPosition(distance);
+        LM.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        LM.setPower(power);
+
+
+        while (LM.isBusy()) ;
+        {
+            //wait until motors get to their target position
+        }
+
+        LM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        LM.setPower(0);
+    }
+
+    public double getLiftEncoder()
+    {
+        return LM.getCurrentPosition();
+    }
+
+    public double getAprilTagPosition(int tagNumber){
+
+        int OurTag = tagNumber;
+        double x_position = 0;
+
+        ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
+
+        if(!currentDetections.isEmpty()) {
+
+            for (AprilTagDetection tag : currentDetections) {
+                if (tag.id == OurTag) {
+                    tagOfInterest = tag;
+                    x_position = tagOfInterest.center.x;
+                    break;
+                }
+            }
+        }
+
+        // camera.stopStreaming();
+        return x_position;
+    }
+
+    // Legacy/Regular Movements
+    /*
     // HEADING
 
     // Read and Return Yaw angle from IMU (Heading)
@@ -489,88 +463,7 @@ public class GearHeadRobot {
 
     ///////////////////////////
     //End of REV_IMU methods///
-    ///////////////////////////
-
-    public void setMecanumPower(double LeftF, double LeftB, double RightF, double RightB) {
-        LF.setPower(LeftF);
-        LB.setPower(LeftB);
-        RF.setPower(RightF);
-        RB.setPower(RightB);
-    }
-
-    public void setArmPower(double armPower){
-        LA.setPower(armPower);
-        RA.setPower(armPower);
-    }
-
-    public void moveArmDistance(double power, int distance, double EndPower) throws InterruptedException {
-
-        RA.setTargetPosition(distance);
-        RA.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
-        RA.setPower(power);
-        LA.setPower(power);
-
-
-        while (RA.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        RA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        RA.setPower(EndPower);
-        LA.setPower(EndPower);
-    }
-
-    public void moveLiftDistance(double power, int distance, double EndPower) throws InterruptedException {
-
-        LM.setTargetPosition(distance);
-        LM.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
-        LM.setPower(power);
-
-
-        while (LM.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        LM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        LM.setPower(0);
-    }
-
-    public double getLiftEncoder()
-    {
-        return LM.getCurrentPosition();
-    }
-
-    public double getAprilTagPosition(int tagNumber){
-
-        int OurTag = tagNumber;
-        double x_position = 0;
-
-        ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
-
-        if(currentDetections.size() != 0) {
-
-            for (AprilTagDetection tag : currentDetections) {
-                if (tag.id == OurTag) {
-                    tagOfInterest = tag;
-                    x_position = tagOfInterest.center.x;
-                    break;
-                }
-            }
-        }
-
-       // camera.stopStreaming();
-        return x_position;
-    }
-
-
+    //////////////////////////
     public void turnRight(double power) {
         LB.setPower(power);
         LF.setPower(power);
@@ -1237,381 +1130,15 @@ public class GearHeadRobot {
         turnToHeading(desiredHeading);
 
 
+
+ */
+
+    // Roadrunner
+
+
     }
 
-    // Methods taken from Roadrunner - these are mainly used for Auto
 
 
     ///////////////////END OF METHODS///////////////////
 
-
-// Box Drawing used in CS
-     public static class SkystoneDeterminationPipeline_LeftTruss_MiddlePosition extends OpenCvPipeline
-    {
-
-
-        static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
-        static final Scalar RED = new Scalar(255, 0, 0);
-
-
-        //Where to start drawing the box (from top left)
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(440,450);
-
-        //BOX Dimensions
-        static final int REGION_WIDTH = 180;
-        static final int REGION_HEIGHT =150;
-
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-        /*
-         * Working variables
-         */
-        Mat region1_Cb;
-        Mat region1_Cr;
-        Mat YCrCb = new Mat();
-        Mat Cb = new Mat();
-        Mat Cr = new Mat();
-        int avg1;
-        int avg2;
-
-
-        /* This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
-         */
-        void inputToCb(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 1);
-        }
-
-        void inputToCr(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cr, 2);
-        }
-
-        @Override
-        public void init(Mat firstFrame)
-        {
-            inputToCb(firstFrame);
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-
-            inputToCr(firstFrame);
-            region1_Cr = Cr.submat(new Rect(region1_pointA, region1_pointB));
-        }
-
-        @Override
-        public Mat processFrame(Mat input)
-        {
-            inputToCb(input);
-            avg1 = (int) Core.mean(region1_Cb).val[0];
-
-            inputToCr(input);
-            avg2 = (int) Core.mean(region1_Cr).val[0];
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    10); // Thickness of the rectangle lines
-
-            return input;
-        }
-
-        public int getAnalysisRED()
-        {
-            return avg1;
-        }
-        public int getAnalysisBLUE()
-        {
-            return avg2;
-        }
-
-    }
-    public static class SkystoneDeterminationPipeline_LeftTruss_RightPosition extends OpenCvPipeline
-    {
-
-
-        static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
-        static final Scalar RED = new Scalar(255, 0, 0);
-
-
-        //Where to start drawing the box (from top left)
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(1000,510);
-
-        //BOX Dimensions
-        static final int REGION_WIDTH = 200;
-        static final int REGION_HEIGHT = 200;
-
-
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-        Mat region1_Cb;
-        Mat region1_Cr;
-        Mat YCrCb = new Mat();
-        Mat Cb = new Mat();
-        Mat Cr = new Mat();
-        int avg1;
-        int avg2;
-
-
-        void inputToCb(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 1);
-        }
-
-        void inputToCr(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cr, 2);
-        }
-
-        @Override
-        public void init(Mat firstFrame)
-        {
-            inputToCb(firstFrame);
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-
-            inputToCr(firstFrame);
-            region1_Cr = Cr.submat(new Rect(region1_pointA, region1_pointB));
-        }
-
-        @Override
-        public Mat processFrame(Mat input)
-        {
-            inputToCb(input);
-            avg1 = (int) Core.mean(region1_Cb).val[0];
-
-            inputToCr(input);
-            avg2 = (int) Core.mean(region1_Cr).val[0];
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    10); // Thickness of the rectangle lines
-
-            return input;
-        }
-
-        public int getAnalysisRED()
-        {
-            return avg1;
-        }
-        public int getAnalysisBLUE()
-        {
-            return avg2;
-        }
-
-    }
-    public static class SkystoneDeterminationPipeline_RightTruss_MiddlePosition extends OpenCvPipeline
-    {
-
-        static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
-        static final Scalar RED = new Scalar(255, 0, 0);
-        static final Scalar YELLOW = new Scalar(0, 255, 255);
-        /*
-         * The core values which define the location and size of the sample regions
-         */
-        //Where to start drawing the box (from top left)
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(170,460);
-
-        //BOX Dimensions
-        static final int REGION_WIDTH = 180;
-        static final int REGION_HEIGHT = 150;
-
-
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-        /*
-         * Working variables
-         */
-        Mat region1_Cb;
-        Mat region1_Cr;
-        Mat YCrCb = new Mat();
-        Mat Cb = new Mat();
-        Mat Cr = new Mat();
-        int avg1;
-        int avg2;
-
-
-        /*
-         * This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
-         */
-        void inputToCb(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 1);
-        }
-
-        void inputToCr(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cr, 2);
-        }
-
-        @Override
-        public void init(Mat firstFrame)
-        {
-            inputToCb(firstFrame);
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-
-            inputToCr(firstFrame);
-            region1_Cr = Cr.submat(new Rect(region1_pointA, region1_pointB));
-        }
-
-        @Override
-        public Mat processFrame(Mat input)
-        {
-            inputToCb(input);
-            avg1 = (int) Core.mean(region1_Cb).val[0];
-
-            inputToCr(input);
-            avg2 = (int) Core.mean(region1_Cr).val[0];
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    10); // Thickness of the rectangle lines
-
-            return input;
-        }
-
-        public int getAnalysisRED()
-        {
-            return avg1;
-        }
-        public int getAnalysisBLUE()
-        {
-            return avg2;
-        }
-
-    }
-    public static class SkystoneDeterminationPipeline_RightTruss_RightPosition extends OpenCvPipeline
-    {
-
-        static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
-        static final Scalar RED = new Scalar(255, 0, 0);
-        static final Scalar YELLOW = new Scalar(0, 255, 255);
-        /*
-         * The core values which define the location and size of the sample regions
-         */
-        //Where to start drawing the box (from top left)
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(760,490);
-
-        //BOX Dimensions
-        static final int REGION_WIDTH = 180;
-        static final int REGION_HEIGHT = 180;
-
-
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-        /*
-         * Working variables
-         */
-        Mat region1_Cb;
-        Mat region1_Cr;
-        Mat YCrCb = new Mat();
-        Mat Cb = new Mat();
-        Mat Cr = new Mat();
-        int avg1;
-        int avg2;
-
-
-        /*
-         * This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
-         */
-        void inputToCb(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 1);
-        }
-
-        void inputToCr(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cr, 2);
-        }
-
-        @Override
-        public void init(Mat firstFrame)
-        {
-            inputToCb(firstFrame);
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-
-            inputToCr(firstFrame);
-            region1_Cr = Cr.submat(new Rect(region1_pointA, region1_pointB));
-        }
-
-        @Override
-        public Mat processFrame(Mat input)
-        {
-            inputToCb(input);
-            avg1 = (int) Core.mean(region1_Cb).val[0];
-
-            inputToCr(input);
-            avg2 = (int) Core.mean(region1_Cr).val[0];
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    10); // Thickness of the rectangle lines
-
-            /*
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    YELLOW, // The color the rectangle is drawn in
-                    -1); // Negative thickness means solid fill
-                    */
-
-
-            return input;
-        }
-
-        public int getAnalysisRED()
-        {
-            return avg1;
-        }
-        public int getAnalysisBLUE()
-        {
-            return avg2;
-        }
-
-    }
-
-}
