@@ -45,6 +45,7 @@ public class GearHeadRobot {
 
 
 
+
     //Declare Servos
 
 
@@ -65,9 +66,9 @@ public class GearHeadRobot {
     public double iconAnalysisRight = 0;
 
 
-    OpenCvCamera webcam;
 
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
+
+
 
 
 
@@ -123,10 +124,10 @@ public class GearHeadRobot {
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        LB.setDirection(DcMotor.Direction.REVERSE);
-        RB.setDirection(DcMotor.Direction.FORWARD);
-        LF.setDirection(DcMotor.Direction.REVERSE);
-        RF.setDirection(DcMotor.Direction.FORWARD);
+        LB.setDirection(DcMotor.Direction.FORWARD);
+        RB.setDirection(DcMotor.Direction.REVERSE);
+        LF.setDirection(DcMotor.Direction.FORWARD);
+        RF.setDirection(DcMotor.Direction.REVERSE);
 
         //Set the motors to run using encoders
         LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -145,22 +146,13 @@ public class GearHeadRobot {
         ////////////////////////
 
         // Hardware Map the camera
-        int cameraMonitorViewId = myOpMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", myOpMode.hardwareMap.appContext.getPackageName());
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                webcam.startStreaming(1280, 720, OpenCvCameraRotation.UPSIDE_DOWN);
-            }
 
-            @Override
-            public void onError(int errorCode) {
+        //aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
-            }
-        });
+
+
 
 
         ///////////////////////////////
@@ -258,7 +250,7 @@ public class GearHeadRobot {
 
 
 
-    public double getAprilTagPosition(int tagNumber){
+   /* public double getAprilTagPosition(int tagNumber){
 
         int OurTag = tagNumber;
         double x_position = 0;
@@ -280,6 +272,23 @@ public class GearHeadRobot {
         return x_position;
     }
 
+    */
+//Method to quickly reset all encoders to zero.
+    public void resetEncoders() {
+        LB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        LF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+
+        LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+    }
     // Legacy/Regular Movements
     /*
     // HEADING

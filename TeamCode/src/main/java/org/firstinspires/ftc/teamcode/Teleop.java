@@ -29,7 +29,7 @@ public class Teleop extends LinearOpMode {
 
 
             if (gamepad1.dpad_up) {
-
+robot.resetEncoders();
             }
             if (gamepad1.dpad_down) {
 

@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class TuningOpModes {
-    // TODO: change this to TankDrive.class if you're using tank
+
     public static final Class<?> DRIVE_CLASS = MecanumDrive.class;
 
     public static final String GROUP = "quickstart";
@@ -140,7 +140,7 @@ public final class TuningOpModes {
                     MecanumDrive.DriveLocalizer dl = (MecanumDrive.DriveLocalizer) md.localizer;
                     encoderGroups.add(new LynxQuadratureEncoderGroup(
                             hardwareMap.getAll(LynxModule.class),
-                            Arrays.asList(dl.leftFront, dl.leftBack, dl.rightFront, dl.rightBack)
+                            Arrays.asList(dl.LF, dl.LB, dl.RF, dl.RB)
                     ));
                     leftEncs.add(new EncoderRef(0, 0));
                     leftEncs.add(new EncoderRef(0, 1));
@@ -187,12 +187,12 @@ public final class TuningOpModes {
                         MecanumDrive.PARAMS.maxProfileAccel,
                         encoderGroups,
                         Arrays.asList(
-                                md.leftFront,
-                                md.leftBack
+                                md.LF,
+                                md.LB
                         ),
                         Arrays.asList(
-                                md.rightFront,
-                                md.rightBack
+                                md.RF,
+                                md.RB
                         ),
                         leftEncs,
                         rightEncs,
