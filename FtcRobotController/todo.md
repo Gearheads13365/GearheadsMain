@@ -5,7 +5,6 @@
 ## TODO:
 
 # Program:
-- Roadrunner Tuning
 - Huskylens (https://ftc-docs.firstinspires.org/en/latest/devices/huskylens/huskylens.html)
 ## Autonomous:
 
