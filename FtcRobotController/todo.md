@@ -5,7 +5,8 @@
 ## TODO:
 
 # Program:
-- Huskylens (https://ftc-docs.firstinspires.org/en/latest/devices/huskylens/huskylens.html)
+- ManualFeedbackTuner
+- April tag detection
 ## Autonomous:
 
 ### Psuedo code

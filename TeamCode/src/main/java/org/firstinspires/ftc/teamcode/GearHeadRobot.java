@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static java.lang.Thread.sleep;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -11,9 +15,15 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -26,6 +36,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class GearHeadRobot {
@@ -43,9 +54,6 @@ public class GearHeadRobot {
     private DcMotor RF = null;
 
 
-
-
-
     //Declare Servos
 
 
@@ -53,18 +61,12 @@ public class GearHeadRobot {
     IMU imu;
 
 
-
     ////////////////////
     //Webcam Variables//
     ////////////////////
 
+    //OpenCvCamera webcam;
 
-
-
-
-
-
-    OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
 
@@ -87,19 +89,27 @@ public class GearHeadRobot {
 
     AprilTagDetection tagOfInterest = null;
 
+
+    //
+
+    public AprilTagProcessor apriltag;
+    public VisionPortal visionPortal;
+
+
     ///////////////////////////
     //End of Webcam Variables//
     ///////////////////////////
 
 
-
     // Define a constructor that allows the OpMode to pass a reference to itself.
-    public GearHeadRobot(LinearOpMode opmode) {myOpMode = opmode;}
+    public GearHeadRobot(LinearOpMode opmode) {
+        myOpMode = opmode;
+    }
 
     /**
      * Initialize all the robot's hardware.
      * This method must be called ONCE when the OpMode is initialized.
-     *
+     * <p>
      * All of the hardware devices are accessed via the hardware map, and initialized.
      */
 
@@ -114,16 +124,15 @@ public class GearHeadRobot {
         RF = myOpMode.hardwareMap.get(DcMotor.class, "RF");
 
 
-
         // Servo Hardware Map
 
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        LB.setDirection(DcMotor.Direction.FORWARD);
-        RB.setDirection(DcMotor.Direction.REVERSE);
-        LF.setDirection(DcMotor.Direction.FORWARD);
-        RF.setDirection(DcMotor.Direction.REVERSE);
+        LB.setDirection(DcMotor.Direction.REVERSE);
+        RB.setDirection(DcMotor.Direction.FORWARD);
+        LF.setDirection(DcMotor.Direction.REVERSE);
+        RF.setDirection(DcMotor.Direction.FORWARD);
 
         //Set the motors to run using encoders
         LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -143,24 +152,23 @@ public class GearHeadRobot {
 
 
         // Hardware Map the camera
-        int cameraMonitorViewId = myOpMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", myOpMode.hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+        {
 
-        camera.setPipeline(aprilTagDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                camera.startStreaming(800, 448, OpenCvCameraRotation.UPRIGHT);
-            }
 
-            @Override
-            public void onError(int errorCode) {
 
-            }
+
+
+
+
+
+
             ///////////////////////////////
             //End of Webcam Initilization//
             ///////////////////////////////
+
+
+            apriltag = AprilTagProcessor.easyCreateWithDefaults();
+            visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), apriltag);
 
 
             //////////////////////
@@ -174,6 +182,20 @@ public class GearHeadRobot {
                     )
             );
             // Initialize IMU using Parameters
+            // Initialize IMU using Parameters
+            imu = myOpMode.hardwareMap.get(IMU.class, "imu");
+            imu.initialize(myIMUparameters);
+
+            // Set up the parameters with which we will use our IMU. Note that integration
+            // algorithm here just reports accelerations to the logcat log; it doesn't actually
+            // provide positional information.
+            BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+            parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+            parameters.loggingEnabled = true;
+            parameters.loggingTag = "IMU";
+            parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
 
             /////////////////////////////
@@ -181,11 +203,14 @@ public class GearHeadRobot {
             /////////////////////////////
 
 
-        });
+            // Set up our telemetry dashboard
+            //composeTelemetry();
+            runtime.reset();
+
+
+        }
+        ;
     }
-
-
-
 
 
     ////////////////////////////////////////////////////////////////////////
@@ -193,45 +218,35 @@ public class GearHeadRobot {
     ////////////////////////////////////////////////////////////////////////
 
 
-
 // This is where you will find functions like driving, moving lifts,getting values etc. to use in Teleop and Auto
 
     //Returns the average of the 4 drive motors (for reading positioning in Teleop)
-    public int GetMotorEncoders(){
+    public int GetMotorEncoders() {
         return
-                ( Math.abs(LB.getCurrentPosition())
-                + Math.abs(RB.getCurrentPosition())
-                + Math.abs(LF.getCurrentPosition())
-                + Math.abs(RF.getCurrentPosition()) )/4;
+                (Math.abs(LB.getCurrentPosition())
+                        + Math.abs(RB.getCurrentPosition())
+                        + Math.abs(LF.getCurrentPosition())
+                        + Math.abs(RF.getCurrentPosition())) / 4;
     }
 
-    public int Get_LB_Encoder()
-    {
+    public int Get_LB_Encoder() {
         return LB.getCurrentPosition();
     }
-    public int Get_LF_Encoder()
-    {
+
+    public int Get_LF_Encoder() {
         return LF.getCurrentPosition();
     }
-    public int Get_RB_Encoder()
-    {
+
+    public int Get_RB_Encoder() {
         return RB.getCurrentPosition();
     }
-    public int Get_RF_Encoder()
-    {
+
+    public int Get_RF_Encoder() {
         return RF.getCurrentPosition();
     }
 
 
-
-
-
-  // PUT ACCESSORY METHODS HERE ///////////////////////////////////////////////////////////////////////
-
-
-
-
-
+    // PUT ACCESSORY METHODS HERE ///////////////////////////////////////////////////////////////////////
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,49 +264,11 @@ public class GearHeadRobot {
     //////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// APRIL TAGS
 
 
-   /* public double getAprilTagPosition(int tagNumber){
-
-        int OurTag = tagNumber;
-        double x_position = 0;
-
-        ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
-
-        if(!currentDetections.isEmpty()) {
-
-            for (AprilTagDetection tag : currentDetections) {
-                if (tag.id == OurTag) {
-                    tagOfInterest = tag;
-                    x_position = tagOfInterest.center.x;
-                    break;
-                }
-            }
-        }
-
-        // camera.stopStreaming();
-        return x_position;
-    }
-
-    */
-//Method to quickly reset all encoders to zero.
-    public void resetEncoders() {
-        LB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        LF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
-
-        LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-    }
     // Legacy/Regular Movements
-    /*
+
     // HEADING
 
     // Read and Return Yaw angle from IMU (Heading)
@@ -366,7 +343,7 @@ public class GearHeadRobot {
             }
 
             //ourheading is the angle read from the robots' gyro sensor
-           // angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            // angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             //ourHeading = AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle);
             robotOrientation = imu.getRobotYawPitchRollAngles();
             ourHeading = robotOrientation.getYaw(AngleUnit.DEGREES);
@@ -448,18 +425,13 @@ public class GearHeadRobot {
         RB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         LF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         RF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RA.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        LA.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        LM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
         LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
     }
 
@@ -480,7 +452,7 @@ public class GearHeadRobot {
 
         //If the distance is greater than slowDistance then run at given speed to
         // distance-slowDistance location. Then to make sure we dont slide go at .1 power until original distance is met.
-        if(distance > slowDistance) {
+        if (distance > slowDistance) {
             LB.setTargetPosition(slowDistance);
             LF.setTargetPosition(slowDistance);
             RB.setTargetPosition(slowDistance);
@@ -509,10 +481,10 @@ public class GearHeadRobot {
         //Set the target position to the original distance (if the original call was less than slowDistance this will
         // be the only speed it uses... if it is greater then it will use the speed provided for the first distance-slowDistance
         // and then use .1 for the remaining slowDistance
-        LB.setTargetPosition(distance-slowDistance);
-        LF.setTargetPosition(distance-slowDistance);
-        RB.setTargetPosition(distance-slowDistance);
-        RF.setTargetPosition(distance-slowDistance);
+        LB.setTargetPosition(distance - slowDistance);
+        LF.setTargetPosition(distance - slowDistance);
+        RB.setTargetPosition(distance - slowDistance);
+        RF.setTargetPosition(distance - slowDistance);
 
         LB.setPower(power);
         LF.setPower(power);
@@ -647,7 +619,7 @@ public class GearHeadRobot {
 
         //If the distance is greater than slowDistance then run at given speed to
         // distance-slowDistance location. Then to make sure we dont slide go at .1 power until original distance is met.
-        if(distance > slowDistance) {
+        if (distance > slowDistance) {
             LB.setTargetPosition(distance - slowDistance);
             LF.setTargetPosition(distance - slowDistance);
             RB.setTargetPosition(distance - slowDistance);
@@ -729,7 +701,7 @@ public class GearHeadRobot {
         RF.setTargetPosition(distance);
 
         int numberOfLoops = 14;
-        int distancePerLoop = Math.floorDiv(distance,numberOfLoops);
+        int distancePerLoop = Math.floorDiv(distance, numberOfLoops);
         int traveledDistance = distancePerLoop;
         int loopMultiplier = 1;
         int loopMultiplier2 = 1;
@@ -749,20 +721,16 @@ public class GearHeadRobot {
 
 
         //while the four motors connected to our wheels haven't found their positions nothing will happen
-        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy())
-        {
-            while(loopMultiplier<numberOfLoops/2) {
+        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) {
+            while (loopMultiplier < numberOfLoops / 2) {
                 if (RB.getCurrentPosition() > traveledDistance) {
                     loopMultiplier += 1;
-                    if(power * loopMultiplier < maxPower)
-                    {
+                    if (power * loopMultiplier < maxPower) {
                         LB.setPower(power * loopMultiplier);
                         LF.setPower(power * loopMultiplier);
                         RB.setPower(power * loopMultiplier);
                         RF.setPower(power * loopMultiplier);
-                    }
-                    else
-                    {
+                    } else {
                         LB.setPower(maxPower);
                         LF.setPower(maxPower);
                         RB.setPower(maxPower);
@@ -775,17 +743,13 @@ public class GearHeadRobot {
             if (RB.getCurrentPosition() > traveledDistance) {
                 loopMultiplier2 -= 1;
                 loopMultiplier += 1;
-                if(loopMultiplier2>0)
-                {
-                    if (power * loopMultiplier2 < maxPower)
-                    {
+                if (loopMultiplier2 > 0) {
+                    if (power * loopMultiplier2 < maxPower) {
                         LB.setPower(power * loopMultiplier2);
                         LF.setPower(power * loopMultiplier2);
                         RB.setPower(power * loopMultiplier2);
                         RF.setPower(power * loopMultiplier2);
-                    }
-                    else
-                    {
+                    } else {
                         LB.setPower(maxPower);
                         LF.setPower(maxPower);
                         RB.setPower(maxPower);
@@ -828,7 +792,7 @@ public class GearHeadRobot {
         RF.setTargetPosition(distance);
 
         int numberOfLoops = 14;
-        int distancePerLoop = Math.floorDiv(distance,numberOfLoops);
+        int distancePerLoop = Math.floorDiv(distance, numberOfLoops);
         int traveledDistance = distancePerLoop;
         int loopMultiplier = 1;
         int loopMultiplier2 = 1;
@@ -848,20 +812,16 @@ public class GearHeadRobot {
 
 
         //while the four motors connected to our wheels haven't found their positions nothing will happen
-        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy())
-        {
-            while(loopMultiplier<numberOfLoops/2) {
+        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) {
+            while (loopMultiplier < numberOfLoops / 2) {
                 if (RB.getCurrentPosition() > traveledDistance) {
                     loopMultiplier += 1;
-                    if(power * loopMultiplier < -maxPower)
-                    {
+                    if (power * loopMultiplier < -maxPower) {
                         LB.setPower(power * loopMultiplier);
                         LF.setPower(power * loopMultiplier);
                         RB.setPower(power * loopMultiplier);
                         RF.setPower(power * loopMultiplier);
-                    }
-                    else
-                    {
+                    } else {
                         LB.setPower(-maxPower);
                         LF.setPower(-maxPower);
                         RB.setPower(-maxPower);
@@ -874,17 +834,13 @@ public class GearHeadRobot {
             if (RB.getCurrentPosition() > traveledDistance) {
                 loopMultiplier2 -= 1;
                 loopMultiplier += 1;
-                if(loopMultiplier2>0)
-                {
-                    if (power * loopMultiplier2 < -maxPower)
-                    {
+                if (loopMultiplier2 > 0) {
+                    if (power * loopMultiplier2 < -maxPower) {
                         LB.setPower(power * loopMultiplier2);
                         LF.setPower(power * loopMultiplier2);
                         RB.setPower(power * loopMultiplier2);
                         RF.setPower(power * loopMultiplier2);
-                    }
-                    else
-                    {
+                    } else {
                         LB.setPower(-maxPower);
                         LF.setPower(-maxPower);
                         RB.setPower(-maxPower);
@@ -922,8 +878,7 @@ public class GearHeadRobot {
         YawPitchRollAngles robotOrientation;
 
 
-        if (distance < 0)
-        {
+        if (distance < 0) {
             sign = -1;
         }
 
@@ -943,7 +898,7 @@ public class GearHeadRobot {
         RF.setTargetPosition(distance);
 
         int numberOfLoops = 14;
-        int distancePerLoop = Math.floorDiv(distance,numberOfLoops);
+        int distancePerLoop = Math.floorDiv(distance, numberOfLoops);
         int traveledDistance = distancePerLoop;
         int loopMultiplier = 1;
         int loopMultiplier2 = 1;
@@ -956,48 +911,42 @@ public class GearHeadRobot {
         RF.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         //we are setting power to the motors
-        LB.setPower(sign*power);
-        LF.setPower(sign*power);
-        RB.setPower(sign*power);
-        RF.setPower(sign*power);
+        LB.setPower(sign * power);
+        LF.setPower(sign * power);
+        RB.setPower(sign * power);
+        RF.setPower(sign * power);
 
 
         //while the four motors connected to our wheels haven't found their positions nothing will happen
-        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy())
-        {
-            while(loopMultiplier<numberOfLoops/2)
-            {
-               // angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-               // currentHeading = AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle);
+        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) {
+            while (loopMultiplier < numberOfLoops / 2) {
+                // angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                // currentHeading = AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle);
                 robotOrientation = imu.getRobotYawPitchRollAngles();
                 currentHeading = robotOrientation.getYaw(AngleUnit.DEGREES);
                 //negative error if drifting left
                 error = desiredHeading - currentHeading;
 
-                errorPower = error/40;
+                errorPower = error / 40;
 
-                if (sign*RB.getCurrentPosition() > sign*traveledDistance) {
+                if (sign * RB.getCurrentPosition() > sign * traveledDistance) {
                     loopMultiplier += 1;
-                    if(power * loopMultiplier < maxPower)
-                    {
-                        LB.setPower(sign*(power * loopMultiplier) - errorPower);
-                        LF.setPower(sign*(power * loopMultiplier) - errorPower);
-                        RB.setPower(sign*(power * loopMultiplier) + errorPower);
-                        RF.setPower(sign*(power * loopMultiplier) + errorPower);
-                    }
-                    else
-                    {
-                        LB.setPower(sign*(maxPower) - errorPower);
-                        LF.setPower(sign*(maxPower) - errorPower);
-                        RB.setPower(sign*(maxPower) + errorPower);
-                        RF.setPower(sign*(maxPower) + errorPower);
+                    if (power * loopMultiplier < maxPower) {
+                        LB.setPower(sign * (power * loopMultiplier) - errorPower);
+                        LF.setPower(sign * (power * loopMultiplier) - errorPower);
+                        RB.setPower(sign * (power * loopMultiplier) + errorPower);
+                        RF.setPower(sign * (power * loopMultiplier) + errorPower);
+                    } else {
+                        LB.setPower(sign * (maxPower) - errorPower);
+                        LF.setPower(sign * (maxPower) - errorPower);
+                        RB.setPower(sign * (maxPower) + errorPower);
+                        RF.setPower(sign * (maxPower) + errorPower);
                     }
                     traveledDistance = distancePerLoop * loopMultiplier;
                     loopMultiplier2 = loopMultiplier;
                 }
             }
-            if (sign*RB.getCurrentPosition() > sign*traveledDistance)
-            {
+            if (sign * RB.getCurrentPosition() > sign * traveledDistance) {
 
                 //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
                 //currentHeading = AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle);
@@ -1008,30 +957,25 @@ public class GearHeadRobot {
                 //negative error if drifting left
                 error = desiredHeading - currentHeading;
 
-                errorPower = error/40;
+                errorPower = error / 40;
 
 
                 loopMultiplier2 -= 1;
                 loopMultiplier += 1;
-                if(loopMultiplier2>0)
-                {
-                    if (power * loopMultiplier2 < maxPower)
-                    {
-                        LB.setPower(sign*(power * loopMultiplier2) - errorPower);
-                        LF.setPower(sign*(power * loopMultiplier2) - errorPower);
-                        RB.setPower(sign*(power * loopMultiplier2) + errorPower);
-                        RF.setPower(sign*(power * loopMultiplier2) + errorPower);
-                    }
-                    else
-                    {
-                        LB.setPower(sign*(maxPower) - errorPower);
-                        LF.setPower(sign*(maxPower) - errorPower);
-                        RB.setPower(sign*(maxPower) + errorPower);
-                        RF.setPower(sign*(maxPower) + errorPower);
+                if (loopMultiplier2 > 0) {
+                    if (power * loopMultiplier2 < maxPower) {
+                        LB.setPower(sign * (power * loopMultiplier2) - errorPower);
+                        LF.setPower(sign * (power * loopMultiplier2) - errorPower);
+                        RB.setPower(sign * (power * loopMultiplier2) + errorPower);
+                        RF.setPower(sign * (power * loopMultiplier2) + errorPower);
+                    } else {
+                        LB.setPower(sign * (maxPower) - errorPower);
+                        LF.setPower(sign * (maxPower) - errorPower);
+                        RB.setPower(sign * (maxPower) + errorPower);
+                        RF.setPower(sign * (maxPower) + errorPower);
                     }
                 }
                 traveledDistance = distancePerLoop * loopMultiplier;
-
 
 
             }
@@ -1050,12 +994,35 @@ public class GearHeadRobot {
 
 
 
- */
-
-    // Roadrunner
-
 
     }
+    public void telemetryAprilTag  ()
+    {
+
+        List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = apriltag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
+        // Step through the list of detections and display info for each one.
+        for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+            } else {
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }   // end for() loop
+
+        // Add "key" information to telemetry
+        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.addLine("RBE = Range, Bearing & Elevation");
+
+    }   // end method telemetryAprilTag()
+}
+
 
 
 

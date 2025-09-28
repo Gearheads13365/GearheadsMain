@@ -2,7 +2,15 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import java.util.List;
 
 @TeleOp(name="Teleop", group="Linear Opmode")
 
@@ -14,6 +22,9 @@ public class Teleop extends LinearOpMode {
         GearHeadRobot robot = new GearHeadRobot(this);
         robot.init();
         robot.imu.resetYaw();
+
+
+
 
 
         double liftPower = -1;
@@ -31,6 +42,10 @@ public class Teleop extends LinearOpMode {
                     ((-gamepad1.left_stick_y - gamepad1.left_stick_x) + (gamepad1.right_stick_x)) / precisePower,
                     ((-gamepad1.left_stick_y - gamepad1.left_stick_x) - (gamepad1.right_stick_x)) / precisePower,
                     ((-gamepad1.left_stick_y + gamepad1.left_stick_x) - (gamepad1.right_stick_x)) / precisePower);
+
+
+            robot.telemetryAprilTag();
+            telemetry.update();
 
             // GAMEPAD 1 BUTTONS //
             if (gamepad1.a) {
@@ -118,7 +133,13 @@ public class Teleop extends LinearOpMode {
 
             }
 
+
+
         }
+        // END OF LOOP
+
+
     }
+
 }
 
