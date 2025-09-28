@@ -58,11 +58,14 @@ public class GearHeadRobot {
     //Webcam Variables//
     ////////////////////
 
-    
 
 
 
 
+
+
+    OpenCvCamera camera;
+    AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
 
     static final double FEET_PER_METER = 3.28084;
@@ -138,51 +141,52 @@ public class GearHeadRobot {
         //Webcam Initilization//
         ////////////////////////
 
+
         // Hardware Map the camera
+        int cameraMonitorViewId = myOpMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", myOpMode.hardwareMap.appContext.getPackageName());
+        camera = OpenCvCameraFactory.getInstance().createWebcam(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+
+        camera.setPipeline(aprilTagDetectionPipeline);
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                camera.startStreaming(800, 448, OpenCvCameraRotation.UPRIGHT);
+            }
+
+            @Override
+            public void onError(int errorCode) {
+
+            }
+            ///////////////////////////////
+            //End of Webcam Initilization//
+            ///////////////////////////////
 
 
+            //////////////////////
+            //IMU Initialization//
+            //////////////////////
 
-        //aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-
-
-
-
-
-        ///////////////////////////////
-        //End of Webcam Initilization//
-        ///////////////////////////////
-
-
-
-        //////////////////////
-        //IMU Initialization//
-        //////////////////////
-
-        IMU.Parameters myIMUparameters  = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
-                )
-        );
-        // Initialize IMU using Parameters
-        imu = myOpMode.hardwareMap.get(IMU.class,"imu");
-        imu.initialize(myIMUparameters);
+            IMU.Parameters myIMUparameters = new IMU.Parameters(
+                    new RevHubOrientationOnRobot(
+                            RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                            RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+                    )
+            );
+            // Initialize IMU using Parameters
 
 
-        /////////////////////////////
-        //End of IMU Initialization//
-        /////////////////////////////
+            /////////////////////////////
+            //End of IMU Initialization//
+            /////////////////////////////
 
 
-
-
-
-
-        // Set up our telemetry dashboard
-        //composeTelemetry();
-        runtime.reset();
-
+        });
     }
+
+
+
+
 
     ////////////////////////////////////////////////////////////////////////
     //Methods - re-usable functions that can be called many times in main///
