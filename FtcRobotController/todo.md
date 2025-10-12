@@ -5,8 +5,7 @@
 ## TODO:
 
 # Program:
-- ManualFeedbackTuner
-- April tag detection
+
 ## Autonomous:
 
 ### Psuedo code
@@ -16,6 +15,4 @@
 
 
 # Parts needed
-
-- Another Gobuilda Pinpoint Odometry Controller
-- 
+- GB PinPoint for programming bot (after meet 1)
