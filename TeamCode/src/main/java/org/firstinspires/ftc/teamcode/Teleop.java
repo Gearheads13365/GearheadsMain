@@ -22,7 +22,7 @@ public class Teleop extends LinearOpMode {
         GearHeadRobot robot = new GearHeadRobot(this);
         robot.init();
         robot.imu.resetYaw();
-
+robot.resetEncoders();
 
 
 
@@ -44,34 +44,34 @@ public class Teleop extends LinearOpMode {
                     ((-gamepad1.left_stick_y + gamepad1.left_stick_x) - (gamepad1.right_stick_x)) / precisePower);
 
 
-            robot.telemetryAprilTag();
+            //robot.telemetryAprilTag();
             telemetry.update();
 
             // GAMEPAD 1 BUTTONS //
             if (gamepad1.a) {
-
+                robot.MoveRightArm(.1);
             }
             if (gamepad1.b) {
-
+                robot.MoveRightArm(-.1);
             }
             if (gamepad1.x) {
-
+robot.MoveRightArm(0);
             }
             if (gamepad1.y) {
-
+robot.MoveRightArm(-.2);
             }
-
+// still needs to be pushed
             if (gamepad1.dpad_up) {
-                robot.resetEncoders();
+               robot.MoveLeftArm(.25);
             }
             if (gamepad1.dpad_down) {
-
+robot.MoveLeftArm(.26);
             }
             if (gamepad1.dpad_left) {
-
+robot.MoveLeftArm(.27);
             }
             if (gamepad1.dpad_right) {
-
+robot.MoveLeftArm(.28);
             }
 
             if (gamepad1.left_trigger > 0) {
