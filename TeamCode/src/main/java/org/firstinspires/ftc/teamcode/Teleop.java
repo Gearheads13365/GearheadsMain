@@ -44,35 +44,41 @@ robot.resetEncoders();
                     ((-gamepad1.left_stick_y + gamepad1.left_stick_x) - (gamepad1.right_stick_x)) / precisePower);
 
 
-            //robot.telemetryAprilTag();
-            telemetry.update();
+
 
             // GAMEPAD 1 BUTTONS //
+            // Open
             if (gamepad1.a) {
-                robot.MoveRightArm(.1);
+                robot.MoveRightArm(.5);
+                robot.MoveLeftArm(.2);
             }
+            // Hold
             if (gamepad1.b) {
-                robot.MoveRightArm(-.1);
+                robot.MoveRightArm(.4);
+                robot.MoveLeftArm(.35);
             }
+            // Launch
             if (gamepad1.x) {
-robot.MoveRightArm(0);
+            robot.MoveRightArm(.25);
+             robot.MoveLeftArm(.5);
             }
             if (gamepad1.y) {
-robot.MoveRightArm(-.2);
+
             }
-// still needs to be pushed
+
             if (gamepad1.dpad_up) {
-               robot.MoveLeftArm(.25);
+
             }
             if (gamepad1.dpad_down) {
-robot.MoveLeftArm(.26);
+
             }
             if (gamepad1.dpad_left) {
-robot.MoveLeftArm(.27);
+
             }
             if (gamepad1.dpad_right) {
-robot.MoveLeftArm(.28);
+
             }
+
 
             if (gamepad1.left_trigger > 0) {
 
@@ -89,23 +95,22 @@ robot.MoveLeftArm(.28);
             if (gamepad1.right_bumper) {
 
             }
-
             //// GAMEPAD 2 ////
             if (gamepad2.a) {
-
+robot.IntakePower(1);
             }
             if (gamepad2.b) {
-
+robot.ShooterPower(.75);
             }
             if (gamepad2.x) {
-
+robot.IntakePower(0);
             }
             if (gamepad2.y) {
-
+robot.ShooterPower(0);
             }
 
             if (gamepad2.dpad_up) {
-
+robot.IntakePower(-1);
             }
             if (gamepad2.dpad_down) {
 
@@ -120,11 +125,7 @@ robot.MoveLeftArm(.28);
             if (gamepad2.left_trigger > 0) {
 
             }
-            if (gamepad2.right_trigger > 0.5) {
-                precisePower = 3;
-            } else {
-                precisePower = 1;
-            }
+
 
             if (gamepad2.left_bumper) {
 
@@ -136,6 +137,9 @@ robot.MoveLeftArm(.28);
 
 
         }
+        robot.telemetryAprilTag();
+        telemetry.addData("distance",robot.GetMotorEncoders());
+        telemetry.update();
         // END OF LOOP
 
 

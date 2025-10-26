@@ -7,6 +7,7 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -248,16 +249,19 @@ public class GearHeadRobot {
     };
 
     public void ShooterPower(double power) {
-        LS.setPower(-power);
-        RS.setPower(power);
+        LS.setPower(power);
+        RS.setPower(-power);
     }
 
     public void IntakePower(double power){
         IN.setPower(power);
     }
 
+    public void Launch(){
 
+    }
 
+    // PUSH CHANGES BEFORE RUNNING
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -26,9 +26,7 @@ public class AUTO_BLUE extends LinearOpMode {
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
-Move to collect 3 balls
-Sort balls into green or purple in the bot if thats part of the design, otherwise we have to go one at a time with ball delivery using a color sensor
-
+move to collect balls, launch, repeat
 
 
  */
