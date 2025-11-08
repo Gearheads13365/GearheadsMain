@@ -16,7 +16,6 @@ public class AUTO_BLUE extends LinearOpMode {
         robot.init();
 
 
-
         robot.imu.resetYaw();
 
         waitForStart();
@@ -25,18 +24,39 @@ public class AUTO_BLUE extends LinearOpMode {
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+
+
+
+
+
+
+
+
+
 /*
+drive
+intake power
+arm catch
+shooter on
+drive to get to launch pos
+wait a second
+arm launch
+
+
+
 move to collect balls, launch, repeat
 
 
  */
 
 
-
-
-
-
-
         //End of Autonomous Program
     }
 }
+
+
+
+

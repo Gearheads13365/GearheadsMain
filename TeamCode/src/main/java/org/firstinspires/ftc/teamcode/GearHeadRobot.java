@@ -1,17 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static java.lang.Thread.sleep;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -41,8 +43,13 @@ public class GearHeadRobot {
 
 
     //Declare Servos
-            private Servo LeftArm = null;
-            private Servo RightArm = null;
+
+            private CRServo FRS = null;
+            private CRServo FLS = null;
+            private CRServo BRS = null;
+            private CRServo BLS = null;
+            private CRServo pusher = null;
+
 
     //IMU Variables
     IMU imu;
@@ -116,8 +123,11 @@ public class GearHeadRobot {
 
 
         // Servo Hardware Map
-        LeftArm = myOpMode.hardwareMap.get(Servo.class,"LeftArm" );
-        RightArm = myOpMode.hardwareMap.get(Servo.class,"RightArm" );
+        FRS = myOpMode.hardwareMap.get(CRServo.class,"FRS" );
+        BRS = myOpMode.hardwareMap.get(CRServo.class,"BRS" );
+
+        BLS = myOpMode.hardwareMap.get(CRServo.class,"BLS" );
+        pusher = myOpMode.hardwareMap.get(CRServo.class,"pusher" );
 
 
         // Most robots need the motor on one side to be reversed to drive forward
@@ -161,7 +171,7 @@ public class GearHeadRobot {
 
 
             apriltag = AprilTagProcessor.easyCreateWithDefaults();
-        //    visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), apriltag);
+           visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), apriltag);
 
 
             //////////////////////
@@ -241,27 +251,43 @@ public class GearHeadRobot {
 
     // PUT ACCESSORY METHODS HERE ///////////////////////////////////////////////////////////////////////
 
-    public void MoveLeftArm(double position){
-        LeftArm.setPosition(position);
-    };
-    public void MoveRightArm(double position){
-        RightArm.setPosition(position);
-    };
 
-    public void ShooterPower(double power) {
+
+    public void shooterPower(double power) {
         LS.setPower(power);
         RS.setPower(-power);
     }
 
-    public void IntakePower(double power){
+    public double GetIntakePower(){
+        return IN.getPower();
+    }
+    public double GetShooterPower(){
+        return (LS.getPower());
+    }
+    public void intakePower(double power){
         IN.setPower(power);
     }
 
-    public void Launch(){
+public void frontStage(double power){
+        FRS.setPower(-power);
+        pusher.setPower(power);
+       // FLS.setPower(power);
+}
+public void backStage(double power){
+        BRS.setPower(power);
+       BLS.setPower(-power);
+}
 
+public double getFStagePower(){
+        return(FLS.getPower());
+    }
+    public double getBStagePower(){
+        return(BLS.getPower());
     }
 
-    // PUSH CHANGES BEFORE RUNNING
+
+
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1006,11 +1032,11 @@ public class GearHeadRobot {
 
 
     }
-    public void telemetryAprilTag  ()
+   /* public void telemetryAprilTag  ()
     {
 
         List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = apriltag.getDetections();
-      /*  telemetry.addData("# AprilTags Detected", currentDetections.size());
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
@@ -1032,8 +1058,10 @@ public class GearHeadRobot {
 
     }   // end method telemetryAprilTag()
 
-       */
-}}
+    */
+
+
+}
 
 
 

@@ -25,7 +25,15 @@ public class AUTO_RED extends LinearOpMode {
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
+        robot.shooterPower(.77);
+        robot.Drive(1030, .5, 0);
+        robot.turnToHeading(120);
+        // drive up to shoot
+        // shoot
+        robot.backStage(1);
+        robot.frontStage(1);
+        sleep(2000);
+        robot.shooterPower(0);
 
 
 

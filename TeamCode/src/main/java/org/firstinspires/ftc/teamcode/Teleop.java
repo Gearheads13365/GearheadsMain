@@ -2,15 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import java.util.List;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="Teleop", group="Linear Opmode")
 
@@ -22,10 +14,11 @@ public class Teleop extends LinearOpMode {
         GearHeadRobot robot = new GearHeadRobot(this);
         robot.init();
         robot.imu.resetYaw();
-robot.resetEncoders();
+        robot.resetEncoders();
+        boolean BackOn = false;
+        boolean FrontOn = false;
 
-
-
+        ElapsedTime buttonTimer = new ElapsedTime();
 
         double liftPower = -1;
         int precisePower = 1;
@@ -44,27 +37,23 @@ robot.resetEncoders();
                     ((-gamepad1.left_stick_y + gamepad1.left_stick_x) - (gamepad1.right_stick_x)) / precisePower);
 
 
-
-
             // GAMEPAD 1 BUTTONS //
             // Open
             if (gamepad1.a) {
-                robot.MoveRightArm(.5);
-                robot.MoveLeftArm(.2);
+robot.resetEncoders();
             }
             // Hold
             if (gamepad1.b) {
-                robot.MoveRightArm(.4);
-                robot.MoveLeftArm(.35);
+
             }
             // Launch
             if (gamepad1.x) {
-            robot.MoveRightArm(.25);
-             robot.MoveLeftArm(.5);
+
             }
             if (gamepad1.y) {
 
             }
+
 
             if (gamepad1.dpad_up) {
 
@@ -96,21 +85,43 @@ robot.resetEncoders();
 
             }
             //// GAMEPAD 2 ////
-            if (gamepad2.a) {
-robot.IntakePower(1);
-            }
-            if (gamepad2.b) {
-robot.ShooterPower(.75);
-            }
-            if (gamepad2.x) {
-robot.IntakePower(0);
-            }
-            if (gamepad2.y) {
-robot.ShooterPower(0);
+
+            if (gamepad2.a && buttonTimer.milliseconds() > 200) {
+                if (robot.GetIntakePower() > .5) {
+                    robot.intakePower(0);
+                } else {
+                    robot.intakePower(1);
+                }
+                buttonTimer.reset();
             }
 
+            if (gamepad2.b && buttonTimer.milliseconds() > 200) {
+                if (robot.GetShooterPower() > .5) {
+                    robot.shooterPower(0);
+                } else {
+                    robot.shooterPower(.85);
+                }
+                buttonTimer.reset();
+            }
+            if (gamepad2.x && buttonTimer.milliseconds() > 200) {
+                if (BackOn) {
+                    robot.backStage(0);
+                    BackOn = false;
+                } else {
+                    robot.backStage(1);
+                    BackOn = true;
+                }
+                buttonTimer.reset();
+            }
+            if (gamepad2.y) {
+                robot.frontStage(1);
+            } else {
+                robot.frontStage(0);
+            }
+
+
             if (gamepad2.dpad_up) {
-robot.IntakePower(-1);
+                robot.intakePower(-1);
             }
             if (gamepad2.dpad_down) {
 
@@ -122,28 +133,31 @@ robot.IntakePower(-1);
 
             }
 
-            if (gamepad2.left_trigger > 0) {
+            if (gamepad2.left_trigger > 0.2) {
+            } else if (gamepad2.left_trigger == 0) {
 
             }
 
 
             if (gamepad2.left_bumper) {
 
-            }
-            if (gamepad2.right_bumper) {
 
             }
 
-
+        if (gamepad2.right_bumper) {
 
         }
-        robot.telemetryAprilTag();
-        telemetry.addData("distance",robot.GetMotorEncoders());
+
+        telemetry.addData("distance", robot.GetMotorEncoders());
         telemetry.update();
+    }
+
+        }
+
         // END OF LOOP
 
 
     }
 
-}
+
 
