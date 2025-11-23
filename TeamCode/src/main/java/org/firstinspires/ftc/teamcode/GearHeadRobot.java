@@ -50,6 +50,9 @@ public class GearHeadRobot {
             private CRServo BLS = null;
             private CRServo pusher = null;
 
+            private Servo LHL =null;
+            private Servo RHL =null;
+
 
     //IMU Variables
     IMU imu;
@@ -128,8 +131,8 @@ public class GearHeadRobot {
 
         BLS = myOpMode.hardwareMap.get(CRServo.class,"BLS" );
         pusher = myOpMode.hardwareMap.get(CRServo.class,"pusher" );
-
-
+        LHL=myOpMode.hardwareMap.get(Servo.class, "LHL");
+        RHL=myOpMode.hardwareMap.get(Servo.class, "RHL");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         LB.setDirection(DcMotor.Direction.REVERSE);
@@ -1031,6 +1034,12 @@ public double getFStagePower(){
 
 
 
+    }
+
+    public void setHL(double servoPosition)
+    {
+        LHL.setPosition(servoPosition);
+        RHL.setPosition(1-servoPosition);
     }
    /* public void telemetryAprilTag  ()
     {
