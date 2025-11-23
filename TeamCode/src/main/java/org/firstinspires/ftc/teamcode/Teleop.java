@@ -76,7 +76,7 @@ robot.resetEncoders();
                     robot.shooterPower(0);
                 } else {
                     /// WAS .85
-                    robot.shooterPower(1);
+                    robot.shooterPower(.85);
                 }
                 buttonTimer.reset();
             }

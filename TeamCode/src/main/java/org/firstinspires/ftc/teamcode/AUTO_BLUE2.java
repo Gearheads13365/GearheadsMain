@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-@Autonomous(name="AUTO_BLUE", group="AutoStuff")
+@Autonomous(name="FAR_BLUE", group="AutoStuff")
 
 public class AUTO_BLUE2 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
@@ -24,36 +24,28 @@ public class AUTO_BLUE2 extends LinearOpMode {
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
-        robot.shooterPower(.85);
-        robot.Drive(-1500, .5, 0);
-        robot.StrafeDistance(.5,70);
-        // drive up to shoot
-        // shoot 1st ball
-        robot.backStage(1);
-        robot.frontStage(1);
-        sleep(500);
-        robot.setHL(0);
-        sleep(500);
-        robot.setHL(1);
-        sleep(500);
-        robot.setHL(0);
+        // move up to launch pos
+        robot.intakePower(-1);
+        robot.shooterPower(.8);
+        robot.Drive(-3800,.5,0);
+        robot.turnToHeading(135);
         sleep(500);
 
-        //2nd ball
-        robot.shooterPower(.81);
+        // Launching the balls
+        robot.backStage(1);
         robot.frontStage(1);
-        sleep(2000);
-        robot.setHL(0);
-        sleep(500);
+        sleep(4000);
         robot.setHL(1);
-        sleep(500);
-        robot.setHL(0);
-        robot.frontStage(0);
-        sleep(100);
-        robot.backStage(0);
-        sleep(500);
         sleep(1000);
-        robot.shooterPower(0);
+        robot.setHL(0);
+        sleep(500);
+        sleep(2000);
+        robot.frontStage(0);
+
+        sleep(500);
+        robot.backStage(0);
+        robot.intakePower(0);
+        // strafe out of the launch zone
 
         robot.StrafeDistance(.5,-1200);
 
