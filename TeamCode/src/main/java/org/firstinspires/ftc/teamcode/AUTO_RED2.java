@@ -26,24 +26,26 @@ public class AUTO_RED2 extends LinearOpMode {
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
         // move up to launch pos
-        robot.intakePower(-1);
-        robot.shooterPower(.8);
+        robot.intakePower(-.5);
         robot.Drive(-3800,.5,0);
-        robot.turnToHeading(135);
+        robot.turnToHeading(130);
+        sleep(500);
+        // Launching the balls
+        robot.StrafeDistance(.5,140);
+        robot.shooterPower(.78);
+        sleep(3200);
+        robot.backStage(.85);
         sleep(500);
 
-        // Launching the balls
-        robot.backStage(1);
-        robot.frontStage(1);
-        sleep(4000);
-        robot.setHL(1);
+        // 2nd
+        robot.frontStage(.85);
         sleep(1000);
-        robot.setHL(0);
-        sleep(500);
-        sleep(2000);
+        // 3rd
+        robot.setHL(1);
+        sleep(4000);
         robot.frontStage(0);
 
-        sleep(500);
+        sleep(1000);
         robot.backStage(0);
         robot.intakePower(0);
         // strafe out of the launch zone

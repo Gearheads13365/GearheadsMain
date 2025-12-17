@@ -1,27 +1,27 @@
 package org.firstinspires.ftc.teamcode;
-
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static java.lang.Thread.sleep;
-
+import android.annotation.SuppressLint;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import java.util.List;
-
 
 public class GearHeadRobot {
 
@@ -50,13 +50,15 @@ public class GearHeadRobot {
             private CRServo BLS = null;
             private CRServo pusher = null;
 
-            private Servo LHL =null;
-            private Servo RHL =null;
+
+            private CRServo LHL =null;
+            private CRServo RHL =null;
 
 
     //IMU Variables
     IMU imu;
-
+// Sensors
+    private ColorSensor color1 = null;
 
     ////////////////////
     //Webcam Variables//
@@ -89,8 +91,7 @@ public class GearHeadRobot {
 
     //
 
-    public AprilTagProcessor apriltag;
-    public VisionPortal visionPortal;
+    private AprilTagProcessor apriltag;
 
 
     ///////////////////////////
@@ -128,11 +129,16 @@ public class GearHeadRobot {
         // Servo Hardware Map
         FRS = myOpMode.hardwareMap.get(CRServo.class,"FRS" );
         BRS = myOpMode.hardwareMap.get(CRServo.class,"BRS" );
-
         BLS = myOpMode.hardwareMap.get(CRServo.class,"BLS" );
         pusher = myOpMode.hardwareMap.get(CRServo.class,"pusher" );
-        LHL=myOpMode.hardwareMap.get(Servo.class, "LHL");
-        RHL=myOpMode.hardwareMap.get(Servo.class, "RHL");
+
+
+        LHL =myOpMode.hardwareMap.get(CRServo.class, "LHL");
+        RHL =myOpMode.hardwareMap.get(CRServo.class, "RHL");
+
+        // Hardware Map Sensors
+        color1 = myOpMode.hardwareMap.get(ColorSensor.class,"color1");
+
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         LB.setDirection(DcMotor.Direction.REVERSE);
@@ -159,22 +165,13 @@ public class GearHeadRobot {
 
         // Hardware Map the camera
         {
-
-
-
-
-
-
-
-
-
             ///////////////////////////////
             //End of Webcam Initilization//
             ///////////////////////////////
-
-
+            final boolean USE_WEBCAM = true;
             apriltag = AprilTagProcessor.easyCreateWithDefaults();
-           visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), apriltag);
+            VisionPortal visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), apriltag);
+
 
 
             //////////////////////
@@ -190,7 +187,7 @@ public class GearHeadRobot {
             // Initialize IMU using Parameters
             // Initialize IMU using Parameters
             imu = myOpMode.hardwareMap.get(IMU.class, "imu");
-            imu.initialize(myIMUparameters);
+            //imu.initialize(myIMUparameters);
 
             // Set up the parameters with which we will use our IMU. Note that integration
             // algorithm here just reports accelerations to the logcat log; it doesn't actually
@@ -215,7 +212,6 @@ public class GearHeadRobot {
 
 
         }
-        ;
     }
 
 
@@ -900,7 +896,32 @@ public double getFStagePower(){
         StopDriving();
 
     }
+    @SuppressLint("DefaultLocale")
+    /* public void telemetryAprilTag()
+    {
+        List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = apriltag.getDetections();
+       telemetry.addData("Number of AprilTags Detected", currentDetections.size());
 
+        // Step through the list of detections and display info for each one.
+        for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+            } else {
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }   // end for() loop
+
+        // Add "key" information to telemetry
+        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.addLine("RBE = Range, Bearing & Elevation");
+    }   // end method telemetryAprilTag()
+
+     */
 
     public void Drive(int distance, double maxPower, double desiredHeading) throws InterruptedException {
 
@@ -1036,38 +1057,14 @@ public double getFStagePower(){
 
     }
 
-    public void setHL(double servoPosition)
+    public void setHL(double power)
     {
-        LHL.setPosition(servoPosition);
-        RHL.setPosition(1-servoPosition);
+        LHL.setPower(-power);
+        RHL.setPower(power);
     }
-   /* public void telemetryAprilTag  ()
-    {
 
-        List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = apriltag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
 
-        // Step through the list of detections and display info for each one.
-        for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-            }
-        }   // end for() loop
 
-        // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
-
-    }   // end method telemetryAprilTag()
-
-    */
 
 
 }

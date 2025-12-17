@@ -32,7 +32,7 @@ package org.firstinspires.ftc.robotcontroller.external.samples;
 import android.app.Activity;
 import android.graphics.Color;
 import android.view.View;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -69,11 +69,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 @TeleOp(name = "Sensor: Color", group = "Sensor")
-@Disabled
+
 public class SensorColor extends LinearOpMode {
 
   /** The colorSensor field will contain a reference to our color sensor hardware object */
-  NormalizedColorSensor colorSensor;
+  NormalizedColorSensor color1;
 
   /** The relativeLayout field is used to aid in providing interesting visual feedback
    * in this sample application; you probably *don't* need this when you use a color sensor on your
@@ -137,12 +137,12 @@ public class SensorColor extends LinearOpMode {
     // Get a reference to our sensor object. It's recommended to use NormalizedColorSensor over
     // ColorSensor, because NormalizedColorSensor consistently gives values between 0 and 1, while
     // the values you get from ColorSensor are dependent on the specific sensor you're using.
-    colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+    color1 = hardwareMap.get(NormalizedColorSensor.class, "color1");
 
     // If possible, turn the light on in the beginning (it might already be on anyway,
     // we just make sure it is if we can).
-    if (colorSensor instanceof SwitchableLight) {
-      ((SwitchableLight)colorSensor).enableLight(true);
+    if (color1 instanceof SwitchableLight) {
+      ((SwitchableLight) color1).enableLight(true);
     }
 
     // Wait for the start button to be pressed.
@@ -167,7 +167,7 @@ public class SensorColor extends LinearOpMode {
 
       // Tell the sensor our desired gain value (normally you would do this during initialization,
       // not during the loop)
-      colorSensor.setGain(gain);
+      color1.setGain(gain);
 
       // Check the status of the X button on the gamepad
       xButtonCurrentlyPressed = gamepad1.x;
@@ -176,8 +176,8 @@ public class SensorColor extends LinearOpMode {
       if (xButtonCurrentlyPressed != xButtonPreviouslyPressed) {
         // If the button is (now) down, then toggle the light
         if (xButtonCurrentlyPressed) {
-          if (colorSensor instanceof SwitchableLight) {
-            SwitchableLight light = (SwitchableLight)colorSensor;
+          if (color1 instanceof SwitchableLight) {
+            SwitchableLight light = (SwitchableLight) color1;
             light.enableLight(!light.isLightOn());
           }
         }
@@ -185,7 +185,7 @@ public class SensorColor extends LinearOpMode {
       xButtonPreviouslyPressed = xButtonCurrentlyPressed;
 
       // Get the normalized colors from the sensor
-      NormalizedRGBA colors = colorSensor.getNormalizedColors();
+      NormalizedRGBA colors = color1.getNormalizedColors();
 
       /* Use telemetry to display feedback on the driver station. We show the red, green, and blue
        * normalized values from the sensor (in the range of 0 to 1), as well as the equivalent
@@ -208,8 +208,8 @@ public class SensorColor extends LinearOpMode {
       /* If this color sensor also has a distance sensor, display the measured distance.
        * Note that the reported distance is only useful at very close range, and is impacted by
        * ambient light and surface reflectivity. */
-      if (colorSensor instanceof DistanceSensor) {
-        telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
+      if (color1 instanceof DistanceSensor) {
+        telemetry.addData("Distance (cm)", "%.3f", ((DistanceSensor) color1).getDistance(DistanceUnit.CM));
       }
 
       telemetry.update();

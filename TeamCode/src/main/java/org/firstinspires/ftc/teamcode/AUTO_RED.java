@@ -17,7 +17,7 @@ public class AUTO_RED extends LinearOpMode {
 
 
 
-        robot.imu.resetYaw();
+       robot.imu.resetYaw();
 
         waitForStart();
 
@@ -25,25 +25,33 @@ public class AUTO_RED extends LinearOpMode {
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
-        robot.shooterPower(1);
-robot.intakePower(-1);
-        robot.Drive(-1500, .5, 0);
-        robot.StrafeDistance(.5,80);
-        robot.backStage(1);
-        robot.frontStage(1);
-        sleep(4000);
-        robot.setHL(1);
+        robot.intakePower(-.5);
         sleep(1000);
-        robot.setHL(0);
+        robot.Drive(-1600, .5, 0);
+        robot.StrafeDistance(.5,80);
+        robot.shooterPower(.78);
+        sleep(3200);
+        robot.backStage(.85);
         sleep(500);
-        sleep(2000);
+
+        // 2nd
+        robot.frontStage(.85);
+        sleep(1000);
+        // 3rd
+        robot.setHL(1);
+        sleep(4000);
         robot.frontStage(0);
 
-        sleep(500);
+        sleep(1000);
         robot.backStage(0);
         robot.intakePower(0);
+        // strafe out of the launch zone
+
 // strafe out
         robot.StrafeDistance(.5,1200);
+
+
+
 
 
 

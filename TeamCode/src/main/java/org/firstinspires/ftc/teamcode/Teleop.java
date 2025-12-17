@@ -18,11 +18,13 @@ public class Teleop extends LinearOpMode {
         boolean BackOn = false;
         boolean FrontOn = false;
 
+
         ElapsedTime buttonTimer = new ElapsedTime();
 
         double liftPower = -1;
         int precisePower = 1;
         int liftState = 0;
+
 
         waitForStart();
 
@@ -40,18 +42,20 @@ public class Teleop extends LinearOpMode {
             // GAMEPAD 1 BUTTONS // Using only 1 Gamepad!!!
             // Open
             if (gamepad1.dpad_left) {
-robot.resetEncoders();
+                robot.resetEncoders();
             }
             // Hold
-            if (gamepad1.dpad_up) {
-                robot.setHL(0);
-            }
             // Launch
             if (gamepad1.dpad_up) {
-            robot.setHL(.5);
+                robot.setHL(1);
             }
+
             if (gamepad1.dpad_down) {
-            robot.setHL(1);
+                  robot.setHL(-1);
+
+            }
+            if (gamepad1.dpad_right){
+                robot.setHL(0);
             }
 
 
@@ -62,11 +66,11 @@ robot.resetEncoders();
             }
 
 
-            if (gamepad1.a  && buttonTimer.milliseconds() > 200) {
-                if (robot.GetIntakePower() <-.5) {
+            if (gamepad1.a && buttonTimer.milliseconds() > 200) {
+                if (robot.GetIntakePower() < -.4) {
                     robot.intakePower(0);
                 } else {
-                    robot.intakePower(-1);
+                    robot.intakePower(-.5);
                 }
                 buttonTimer.reset();
             }
@@ -75,7 +79,7 @@ robot.resetEncoders();
                 if (robot.GetShooterPower() > .5) {
                     robot.shooterPower(0);
                 } else {
-                    /// WAS .85
+                    // WAS .85
                     robot.shooterPower(.85);
                 }
                 buttonTimer.reset();
@@ -98,7 +102,7 @@ robot.resetEncoders();
 
 
             if (gamepad1.right_bumper) {
-                robot.intakePower(1);
+                robot.intakePower(.5);
             }
 
             if (gamepad1.left_trigger > 0.2) {
@@ -106,16 +110,21 @@ robot.resetEncoders();
 
             }
 
-        telemetry.addData("distance", robot.GetMotorEncoders());
-        telemetry.update();
-    }
 
+            //   robot.telemetryAprilTag();
+
+            telemetry.addData("distance", robot.GetMotorEncoders());
+            telemetry.update();
         }
+
+    }
+}
+
 
         // END OF LOOP
 
 
-    }
+
 
 
 
