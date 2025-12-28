@@ -1,10 +1,15 @@
 package org.firstinspires.ftc.teamcode;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static java.lang.Thread.sleep;
 import android.annotation.SuppressLint;
+import android.util.Size;
+import com.qualcomm.robotcore.hardware.SwitchableLight;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -13,12 +18,23 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.opencv.ImageRegion;
+import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.opencv.ImageRegion;
+import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
 import org.openftc.apriltag.AprilTagDetection;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import java.util.List;
@@ -27,7 +43,7 @@ public class GearHeadRobot {
 
 
     /* Declare OpMode members. */
-    private LinearOpMode myOpMode = null;   // gain access to methods in the calling OpMode.
+    private LinearOpMode myOpMode;  // gain access to methods in the calling OpMode.
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -37,39 +53,40 @@ public class GearHeadRobot {
     private DcMotor LF = null;
     private DcMotor RF = null;
 
+
+    // 2nd design motors
     private DcMotor LS = null;
     private DcMotor RS = null;
+
+    // Keep for 3rd design
     private DcMotor IN = null;
 
 
     //Declare Servos
-
+// 2nd design
             private CRServo FRS = null;
             private CRServo FLS = null;
             private CRServo BRS = null;
             private CRServo BLS = null;
             private CRServo pusher = null;
-
-
             private CRServo LHL =null;
             private CRServo RHL =null;
+            // 3rd design
+    // private Servo cycler = null;
 
 
     //IMU Variables
     IMU imu;
 // Sensors
-    private ColorSensor color1 = null;
+    private NormalizedColorSensor color1;
+    //private NormalizedColorSensor color2;
+   // private NormalizedColorSensor color3;
 
     ////////////////////
     //Webcam Variables//
     ////////////////////
 
-    //OpenCvCamera webcam;
-
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
-
-
-    static final double FEET_PER_METER = 3.28084;
+        static final double FEET_PER_METER = 3.28084;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -81,16 +98,6 @@ public class GearHeadRobot {
     double cy = 221.506;
 
     // UNITS ARE METERS
-    double tagsize = 0.166;
-
-    int OurTag = 12;
-    double x_position = 0;
-
-    AprilTagDetection tagOfInterest = null;
-
-
-    //
-
     private AprilTagProcessor apriltag;
 
 
@@ -137,7 +144,7 @@ public class GearHeadRobot {
         RHL =myOpMode.hardwareMap.get(CRServo.class, "RHL");
 
         // Hardware Map Sensors
-        color1 = myOpMode.hardwareMap.get(ColorSensor.class,"color1");
+        color1 = myOpMode.hardwareMap.get(NormalizedColorSensor.class,"color1");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -250,8 +257,6 @@ public class GearHeadRobot {
 
     // PUT ACCESSORY METHODS HERE ///////////////////////////////////////////////////////////////////////
 
-
-
     public void shooterPower(double power) {
         LS.setPower(power);
         RS.setPower(-power);
@@ -277,14 +282,13 @@ public void backStage(double power){
        BLS.setPower(-power);
 }
 
-public double getFStagePower(){
-        return(FLS.getPower());
-    }
-    public double getBStagePower(){
-        return(BLS.getPower());
+// 3rd design
+
+   /* public void CyclerPos(pos){
+        cycler.setPosition(pos)
     }
 
-
+    */
 
 
 
@@ -896,32 +900,27 @@ public double getFStagePower(){
         StopDriving();
 
     }
-    @SuppressLint("DefaultLocale")
+
     /* public void telemetryAprilTag()
     {
         List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = apriltag.getDetections();
-       telemetry.addData("Number of AprilTags Detected", currentDetections.size());
-
         // Step through the list of detections and display info for each one.
-        for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-            }
-        }   // end for() loop
 
-        // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
     }   // end method telemetryAprilTag()
 
      */
+
+
+
+double hue;
+    public void Color(){
+    }
+
+
+    public void Sensor1On(){
+        SwitchableLight light = (SwitchableLight) color1;
+        light.enableLight(!light.isLightOn());
+        NormalizedRGBA colors = color1.getNormalizedColors();}
 
     public void Drive(int distance, double maxPower, double desiredHeading) throws InterruptedException {
 
