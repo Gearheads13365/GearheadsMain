@@ -80,7 +80,7 @@ public class GearHeadRobot {
     // Define Vision Processes
     private AprilTagProcessor aprilTag;
     private static final boolean USE_WEBCAM = true;
-    private VisionPortal visionPortal;
+
 
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
@@ -137,7 +137,7 @@ public class GearHeadRobot {
         // Hardware Map the camera
             final boolean USE_WEBCAM = true;
             aprilTag = AprilTagProcessor.easyCreateWithDefaults();
-            VisionPortal visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), aprilTag);
+
 
             //////////////////////
             //IMU Initialization//

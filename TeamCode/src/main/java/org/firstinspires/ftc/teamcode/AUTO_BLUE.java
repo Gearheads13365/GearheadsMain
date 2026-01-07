@@ -40,6 +40,12 @@ public class AUTO_BLUE extends LinearOpMode {
         // 2 Shoot: .05
         //  3 Shoot: .45
 
+        /// TODO:
+        /// - Make accurate color sensing method for switching to the correct color ball
+        /// - Have 3 different functions for the 3 different april tag motifs (if GPP, do xyz, if PGP do xyz)
+        /// - RoadRunner movements setup
+        /// - Test the autonomous program for accuracy
+
 sleep(500);
         {
             NormalizedRGBA colors = color.getNormalizedColors();

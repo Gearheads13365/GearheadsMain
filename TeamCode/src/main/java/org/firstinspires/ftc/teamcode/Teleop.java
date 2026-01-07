@@ -32,6 +32,7 @@ public class Teleop extends LinearOpMode {
     VisionPortal visionPortal;
 
 
+
     public void runOpMode() throws InterruptedException {
         double x_position = 0;
         GearHeadRobot robot = new GearHeadRobot(this);
@@ -45,6 +46,7 @@ public class Teleop extends LinearOpMode {
         initAprilTag();
         boolean Green = false;
         boolean Purple = false;
+
         double hue;
 
         ElapsedTime buttonTimer = new ElapsedTime();
@@ -95,63 +97,60 @@ public class Teleop extends LinearOpMode {
             ///  1 Shoot: .9
             // 2 Shoot: .05
             //  3 Shoot: .45
-            if (gamepad1.dpad_up) {
-                robot.cyclerPos(.25);
-            }
-            if (gamepad1.dpad_right) {
-                robot.cyclerPos(.67);
-
-            }
-            if (gamepad1.dpad_left) {
-                robot.cyclerPos(1);
-            }
-            if (gamepad1.a) {
-                robot.cyclerPos(.85);
-            }
-            if (gamepad1.b) {
-                robot.cyclerPos(.05);
-            }
-            if (gamepad1.x) {
-                robot.cyclerPos(.45);
-            }
             /// GAMEPAD 2
 
-            if (gamepad2.a && buttonTimer.milliseconds() > 200) {
-                if (robot.GetIntakePower() < -.5) {
-                    robot.intakePower(0);
-                } else {
-                    robot.intakePower(-1);
-                }
-                buttonTimer.reset();
+            if (gamepad2.a) {
+                robot.pusherPos(.34);
             }
-
-            if (gamepad2.b) {
-                if (robot.GetLauncherPower() > .4) {
-                    robot.launcherPower(0);
-                } else {
-                    robot.launcherPower(1);
-                }
-                buttonTimer.reset();
-            }
-            if (gamepad2.x){
+            else {
                 robot.pusherPos(.55);
             }
+
+
+
+
+            if (gamepad2.b) {
+                robot.cyclerPos(.45);
+            }
+
+            if (gamepad2.x){
+                robot.cyclerPos(.87);
+            }
             if (gamepad2.y){
-                // Push up
-                robot.pusherPos(.44);
+                robot.cyclerPos(.05);
             }
 
-
+                // (1 intake): .25
+                ///  2 Intake: .67
+                ///  3 intake: 1
             if (gamepad2.dpad_up) {
+                robot.cyclerPos(.67);
             }
+
 
             if (gamepad2.dpad_left) {
+                robot.cyclerPos(.25);
 
-                // Cycler
             }
             if (gamepad2.dpad_right) {
-                // Cycler
+                robot.cyclerPos(1);
             }
+
+            if(gamepad2.left_bumper){
+                robot.intakePower(-1);
+            }
+            if(gamepad2.right_bumper){
+                robot.intakePower(0);
+            }
+            if (gamepad2.left_trigger > 0){
+                robot.launcherPower(.8);
+            }
+            if (gamepad2.right_trigger > 0){
+robot.launcherPower(0);
+            }
+
+
+
             telemetry.update();
 
         }
