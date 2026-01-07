@@ -24,7 +24,7 @@ public class AUTO_RED2 extends LinearOpMode {
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
-
+/*
         // move up to launch pos
         robot.intakePower(-.5);
         robot.Drive(-3800,.5,0);
@@ -52,6 +52,8 @@ public class AUTO_RED2 extends LinearOpMode {
 
         robot.StrafeDistance(.5,1200);
 
+
+ */
 
 
 

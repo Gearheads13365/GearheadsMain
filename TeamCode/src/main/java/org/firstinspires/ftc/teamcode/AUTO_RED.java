@@ -25,7 +25,7 @@ public class AUTO_RED extends LinearOpMode {
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
-        robot.intakePower(-.5);
+       /* robot.intakePower(-.5);
         sleep(1000);
         robot.Drive(-1600, .5, 0);
         robot.StrafeDistance(.5,80);
@@ -50,6 +50,8 @@ public class AUTO_RED extends LinearOpMode {
 // strafe out
         robot.StrafeDistance(.5,1200);
 
+
+        */
 
 
 

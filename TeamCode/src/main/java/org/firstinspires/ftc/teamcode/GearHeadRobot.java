@@ -18,9 +18,11 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -31,10 +33,12 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
-import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import java.util.List;
@@ -43,67 +47,40 @@ public class GearHeadRobot {
 
 
     /* Declare OpMode members. */
-    private LinearOpMode myOpMode;  // gain access to methods in the calling OpMode.
+    LinearOpMode myOpMode;  // gain access to methods in the calling OpMode.
 
     private ElapsedTime runtime = new ElapsedTime();
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    private DcMotor LB = null;
-    private DcMotor RB = null;
-    private DcMotor LF = null;
-    private DcMotor RF = null;
 
+    private DcMotor LB ; //  EH Port 1
+    private DcMotor RB ; // CH Port 1
+    private DcMotor LF ; // EH Port 0
+    private DcMotor RF ; // CH Port 0
+    private DcMotor IN ; // CH Port 2
+    private DcMotor LNCH;// EH Port 2
 
-    // 2nd design motors
-    private DcMotor LS = null;
-    private DcMotor RS = null;
-
-    // Keep for 3rd design
-    private DcMotor IN = null;
-
+    private DcMotor RL ;// CH Port 3
+    private DcMotor LL; // EH Port 3
 
     //Declare Servos
-// 2nd design
-            private CRServo FRS = null;
-            private CRServo FLS = null;
-            private CRServo BRS = null;
-            private CRServo BLS = null;
-            private CRServo pusher = null;
-            private CRServo LHL =null;
-            private CRServo RHL =null;
-            // 3rd design
-    // private Servo cycler = null;
+
+    private Servo sorter;
+    private Servo pusher;
 
 
     //IMU Variables
     IMU imu;
+
+    // Pinpoint Odometry
+    private GoBildaPinpointDriver pinpoint; // EH Port 1
 // Sensors
-    private NormalizedColorSensor color1;
-    //private NormalizedColorSensor color2;
-   // private NormalizedColorSensor color3;
+    private NormalizedColorSensor color; // EH Port 2
 
-    ////////////////////
-    //Webcam Variables//
-    ////////////////////
-
-        static final double FEET_PER_METER = 3.28084;
-
-    // Lens intrinsics
-    // UNITS ARE PIXELS
-    // NOTE: this calibration is for the C920 webcam at 800x448.
-    // You will need to do your own calibration for other configurations!
-    double fx = 578.272;
-    double fy = 578.272;
-    double cx = 402.145;
-    double cy = 221.506;
-
-    // UNITS ARE METERS
-    private AprilTagProcessor apriltag;
-
-
-    ///////////////////////////
-    //End of Webcam Variables//
-    ///////////////////////////
+    // Define Vision Processes
+    private AprilTagProcessor aprilTag;
+    private static final boolean USE_WEBCAM = true;
+    private VisionPortal visionPortal;
 
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
@@ -119,32 +96,23 @@ public class GearHeadRobot {
      */
 
     public void init() {
-
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
+        // Initialize the hardware variables.
+        // Make sure the names match in the code and in the Driver Hub or it will not find the hardware!
         LB = myOpMode.hardwareMap.get(DcMotor.class, "LB");
         RB = myOpMode.hardwareMap.get(DcMotor.class, "RB");
         LF = myOpMode.hardwareMap.get(DcMotor.class, "LF");
         RF = myOpMode.hardwareMap.get(DcMotor.class, "RF");
-        RS = myOpMode.hardwareMap.get(DcMotor.class, "RS");
-        LS = myOpMode.hardwareMap.get(DcMotor.class, "LS");
         IN = myOpMode.hardwareMap.get(DcMotor.class, "IN");
-
-
+        LNCH = myOpMode.hardwareMap.get(DcMotor.class,"LNCH");
+        RL = myOpMode.hardwareMap.get(DcMotor.class,"RL");
+        LL = myOpMode.hardwareMap.get(DcMotor.class,"LL");
 
         // Servo Hardware Map
-        FRS = myOpMode.hardwareMap.get(CRServo.class,"FRS" );
-        BRS = myOpMode.hardwareMap.get(CRServo.class,"BRS" );
-        BLS = myOpMode.hardwareMap.get(CRServo.class,"BLS" );
-        pusher = myOpMode.hardwareMap.get(CRServo.class,"pusher" );
+        sorter = myOpMode.hardwareMap.get(Servo.class,"sorter" );
+        pusher = myOpMode.hardwareMap.get(Servo.class,"pusher" );
 
-
-        LHL =myOpMode.hardwareMap.get(CRServo.class, "LHL");
-        RHL =myOpMode.hardwareMap.get(CRServo.class, "RHL");
-
-        // Hardware Map Sensors
-        color1 = myOpMode.hardwareMap.get(NormalizedColorSensor.class,"color1");
+        // Sensor Hardware Map
+        color = myOpMode.hardwareMap.get(NormalizedColorSensor.class,"color");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -165,21 +133,11 @@ public class GearHeadRobot {
         LF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        ////////////////////////
-        //Webcam Initilization//
-        ////////////////////////
-
 
         // Hardware Map the camera
-        {
-            ///////////////////////////////
-            //End of Webcam Initilization//
-            ///////////////////////////////
             final boolean USE_WEBCAM = true;
-            apriltag = AprilTagProcessor.easyCreateWithDefaults();
-            VisionPortal visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), apriltag);
-
-
+            aprilTag = AprilTagProcessor.easyCreateWithDefaults();
+            VisionPortal visionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), aprilTag);
 
             //////////////////////
             //IMU Initialization//
@@ -211,26 +169,29 @@ public class GearHeadRobot {
             /////////////////////////////
             //End of IMU Initialization//
             /////////////////////////////
-
-
-            // Set up our telemetry dashboard
-            //composeTelemetry();
             runtime.reset();
 
 
-        }
+
+
+
+
+
+
+
+
+
     }
 
 
     ////////////////////////////////////////////////////////////////////////
-    //Methods - re-usable functions that can be called many times in main///
+    //Methods - re-usable functions that can be called many times in Opmodes
     ////////////////////////////////////////////////////////////////////////
-
-
 // This is where you will find functions like driving, moving lifts,getting values etc. to use in Teleop and Auto
 
-    //Returns the average of the 4 drive motors (for reading positioning in Teleop)
+   ///// Wheel Methods
     public int GetMotorEncoders() {
+        //Returns the average of the 4 drive motors (for reading positioning in Teleop)
         return
                 (Math.abs(LB.getCurrentPosition())
                         + Math.abs(RB.getCurrentPosition())
@@ -238,14 +199,13 @@ public class GearHeadRobot {
                         + Math.abs(RF.getCurrentPosition())) / 4;
     }
 
+// These return the indiviual values of each wheel motor
     public int Get_LB_Encoder() {
         return LB.getCurrentPosition();
     }
-
     public int Get_LF_Encoder() {
         return LF.getCurrentPosition();
     }
-
     public int Get_RB_Encoder() {
         return RB.getCurrentPosition();
     }
@@ -253,48 +213,6 @@ public class GearHeadRobot {
     public int Get_RF_Encoder() {
         return RF.getCurrentPosition();
     }
-
-
-    // PUT ACCESSORY METHODS HERE ///////////////////////////////////////////////////////////////////////
-
-    public void shooterPower(double power) {
-        LS.setPower(power);
-        RS.setPower(-power);
-    }
-
-    public double GetIntakePower(){
-        return IN.getPower();
-    }
-    public double GetShooterPower(){
-        return (LS.getPower());
-    }
-    public void intakePower(double power){
-        IN.setPower(power);
-    }
-
-public void frontStage(double power){
-        FRS.setPower(-power);
-        pusher.setPower(power);
-       // FLS.setPower(power);
-}
-public void backStage(double power){
-        BRS.setPower(power);
-       BLS.setPower(-power);
-}
-
-// 3rd design
-
-   /* public void CyclerPos(pos){
-        cycler.setPosition(pos)
-    }
-
-    */
-
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // SetMecanumPower: This sets motor powers to the four wheels, allowing movement in teleop
 
@@ -306,8 +224,40 @@ public void backStage(double power){
     }
     //////////////////////////////////////////////////////////////////////////////////////////////
 
+///// Accessory Methods
+
+    /// MOTORS
+    public double GetIntakePower(){
+        return IN.getPower();
+    }
+    public void intakePower(double power){
+        IN.setPower(power);
+    }
+    public void launcherPower(double power){
+        LNCH.setPower(power);
+    }
+    public double GetLauncherPower(){
+      return LNCH.getPower();
+    }
+    public void LiftPower(double power){
+        RL.setPower(power);
+        LL.setPower(-power);
+    }
+
+    /// SERVOS
+    public void pusherPos(double pos){
+        pusher.setPosition(pos);
+    }
+    public void cyclerPos(double pos){
+        sorter.setPosition(pos);
+    }
 
 
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+                            /// AUTO FUNCTIONS ///
     // HEADING
 
     // Read and Return Yaw angle from IMU (Heading)
@@ -395,9 +345,6 @@ public void backStage(double power){
         } // END OF WHILE LOOP
         StopDriving();
     } //END OF TURNTOHEADING
-
-    ///////////////////////////
-    //End of REV_IMU methods///
     //////////////////////////
     public void turnRight(double power) {
         LB.setPower(power);
@@ -411,42 +358,6 @@ public void backStage(double power){
         LF.setPower(-power);
         RB.setPower(power);
         RF.setPower(power);
-    }
-
-    //Drives Backward at power for time milliseconds
-    public void DriveForwardTime(double power, long time) throws InterruptedException {
-        LB.setPower(power);
-        LF.setPower(power);
-        RB.setPower(power);
-        RF.setPower(power);
-        sleep(time);
-        StopDriving();
-    }
-
-    //Drives Backward at power for time milliseconds
-    public void DriveBackwardTime(double power, long time) throws InterruptedException {
-        LB.setPower(-power);
-        LF.setPower(-power);
-        RB.setPower(-power);
-        RF.setPower(-power);
-        sleep(time);
-        StopDriving();
-    }
-
-    // Strafe Left at power for time in milliseconds
-    public void StrafeLeft(double power) throws InterruptedException {
-        LB.setPower(power);
-        LF.setPower(-power);
-        RB.setPower(-power);
-        RF.setPower(power);
-    }
-
-    // Strafe Right at power for time in milliseconds
-    public void StrafeRight(double power) throws InterruptedException {
-        LB.setPower(-power);
-        LF.setPower(power);
-        RB.setPower(power);
-        RF.setPower(-power);
     }
 
     // Stops the motors by setting both to zero... no parameters needed
@@ -473,131 +384,6 @@ public void backStage(double power){
 
 
     }
-
-    //Method to drive forward a distance at power using motor encoders
-    public void SlowDriveForwardDistance(double power, int distance) throws InterruptedException {
-        //this resets the encoders to zero
-        int slowDistance = 200;
-
-        LB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        LF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        //If the distance is greater than slowDistance then run at given speed to
-        // distance-slowDistance location. Then to make sure we dont slide go at .1 power until original distance is met.
-        if (distance > slowDistance) {
-            LB.setTargetPosition(slowDistance);
-            LF.setTargetPosition(slowDistance);
-            RB.setTargetPosition(slowDistance);
-            RF.setTargetPosition(slowDistance);
-
-
-            //this is telling the motors to run to the desired position listed above
-            LB.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            LF.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            RB.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            RF.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            //we are setting power to the motors
-            LB.setPower(.1);
-            LF.setPower(.1);
-            RB.setPower(.1);
-            RF.setPower(.1);
-
-            //while the four motors connected to our wheels haven't found their positions nothing will happen
-            while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) ;
-            {
-                //wait until motors get to their target position
-            }
-
-        }
-        //Set the target position to the original distance (if the original call was less than slowDistance this will
-        // be the only speed it uses... if it is greater then it will use the speed provided for the first distance-slowDistance
-        // and then use .1 for the remaining slowDistance
-        LB.setTargetPosition(distance - slowDistance);
-        LF.setTargetPosition(distance - slowDistance);
-        RB.setTargetPosition(distance - slowDistance);
-        RF.setTargetPosition(distance - slowDistance);
-
-        LB.setPower(power);
-        LF.setPower(power);
-        RB.setPower(power);
-        RF.setPower(power);
-
-        //while the four motors connected to our wheels haven't found their positions nothing will happen
-        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        LB.setTargetPosition(distance);
-        LF.setTargetPosition(distance);
-        RB.setTargetPosition(distance);
-        RF.setTargetPosition(distance);
-
-        LB.setPower(.1);
-        LF.setPower(.1);
-        RB.setPower(.1);
-        RF.setPower(.1);
-
-        //while the four motors connected to our wheels haven't found their positions nothing will happen
-        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        StopDriving();
-
-        //  we put the motors back to using encoders that way if the method needs to be run again it will still be counting rotations
-        LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-    }
-
-    //Method to drive backward a distance at power using motor encoders
-    public void DriveBackwardDistance(double power, int distance) throws InterruptedException {
-        LB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        LF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        RF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        LB.setTargetPosition(-distance);
-        LF.setTargetPosition(-distance);
-        RB.setTargetPosition(-distance);
-        RF.setTargetPosition(-distance);
-
-        LB.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        LF.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        RB.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        RF.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        LB.setPower(-power);
-        LF.setPower(-power);
-        RB.setPower(-power);
-        RF.setPower(-power);
-
-        while (LB.isBusy() && LF.isBusy() && RB.isBusy() && RF.isBusy()) ;
-        {
-            //wait until motors get to their target position
-        }
-
-        StopDriving();
-
-        LB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        RF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-    }
-
 
     public void StrafeDistance(double power, int distance) throws InterruptedException {
 
@@ -901,26 +687,9 @@ public void backStage(double power){
 
     }
 
-    /* public void telemetryAprilTag()
-    {
-        List<org.firstinspires.ftc.vision.apriltag.AprilTagDetection> currentDetections = apriltag.getDetections();
-        // Step through the list of detections and display info for each one.
-
-    }   // end method telemetryAprilTag()
-
-     */
 
 
 
-double hue;
-    public void Color(){
-    }
-
-
-    public void Sensor1On(){
-        SwitchableLight light = (SwitchableLight) color1;
-        light.enableLight(!light.isLightOn());
-        NormalizedRGBA colors = color1.getNormalizedColors();}
 
     public void Drive(int distance, double maxPower, double desiredHeading) throws InterruptedException {
 
@@ -1055,13 +824,6 @@ double hue;
 
 
     }
-
-    public void setHL(double power)
-    {
-        LHL.setPower(-power);
-        RHL.setPower(power);
-    }
-
 
 
 

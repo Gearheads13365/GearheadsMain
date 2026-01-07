@@ -23,7 +23,7 @@ public class AUTO_BLUE2 extends LinearOpMode {
         ///////////////////////////////////////////////////////////////////////////////////////////////
         // Everything below this line is what the robot is actually doing during the autonomous mode //
         ///////////////////////////////////////////////////////////////////////////////////////////////
-
+/*
         // move up to launch pos
         robot.intakePower(-.5);
         robot.Drive(-3800,.5,0);
@@ -56,6 +56,8 @@ robot.Drive(300,.5,-130);
 
 
 
+
+ */
 
 
 

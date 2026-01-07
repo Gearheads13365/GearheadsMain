@@ -1,40 +1,82 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
+
+import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
+
+import java.util.List;
 
 @TeleOp(name="Teleop", group="Linear Opmode")
 
 public class Teleop extends LinearOpMode {
+    public NormalizedColorSensor color;
+    AprilTagProcessor aprilTag;
+    VisionPortal visionPortal;
+
+
     public void runOpMode() throws InterruptedException {
-
         double x_position = 0;
-
         GearHeadRobot robot = new GearHeadRobot(this);
+
+        // color must be called seperately in each opmode it is used in - the color sensor only works by directly calling it in the opmode, not in GHR
+        color = robot.myOpMode.hardwareMap.get(NormalizedColorSensor.class, "color");
+
         robot.init();
         robot.imu.resetYaw();
         robot.resetEncoders();
-        boolean BackOn = false;
-        boolean FrontOn = false;
-
+        initAprilTag();
+        boolean Green = false;
+        boolean Purple = false;
+        double hue;
 
         ElapsedTime buttonTimer = new ElapsedTime();
-
-        double liftPower = -1;
         int precisePower = 1;
-        int liftState = 0;
 
 
         waitForStart();
 
+
+
         while (opModeIsActive()) {
+
+            {  // COLOR SENSING - must be copied to each opmode it is used in
+                NormalizedRGBA colors = color.getNormalizedColors();
+                hue = JavaUtil.colorToHue(colors.toColor());
+
+                if (hue > 90 && hue < 200) {
+                    telemetry.addData("Color", "Green");
+                    Green = true;
+                    Purple = false;
+                } else if (hue > 225 && hue < 350) {
+                    telemetry.addData("Color", "Purple");
+                    Purple = true;
+                    Green = false;
+                } else {
+                    telemetry.addData("Color", "None");
+                    Green = false;
+                    Purple = false;
+                }
+                // END COLOR SENSING
+            }
+            telemetryAprilTag();
 
             // CONTROLS FOR TELEOP //
             //Set mecanum power
@@ -45,85 +87,99 @@ public class Teleop extends LinearOpMode {
                     ((-gamepad1.left_stick_y + gamepad1.left_stick_x) - (gamepad1.right_stick_x)) / precisePower);
 
 
-            // GAMEPAD 1 BUTTONS // Using only 1 Gamepad!!!
-            // Open
-            if (gamepad1.dpad_left) {
-                robot.resetEncoders();
-            }
-            // Hold
-            // Launch
+            // GAMEPAD 1 BUTTONS
+
+            // (1 intake): .25
+            ///  2 Intake: .67
+            ///  3 intake: 1
+            ///  1 Shoot: .9
+            // 2 Shoot: .05
+            //  3 Shoot: .45
             if (gamepad1.dpad_up) {
-                robot.setHL(1);
+                robot.cyclerPos(.25);
             }
-
-            if (gamepad1.dpad_down) {
-                  robot.setHL(-1);
+            if (gamepad1.dpad_right) {
+                robot.cyclerPos(.67);
 
             }
-            if (gamepad1.dpad_right){
-                robot.setHL(0);
+            if (gamepad1.dpad_left) {
+                robot.cyclerPos(1);
             }
-
-
-            if (gamepad1.right_trigger > 0.5) {
-                precisePower = 3;
-            } else {
-                precisePower = 1;
+            if (gamepad1.a) {
+                robot.cyclerPos(.85);
             }
-
-
-            if (gamepad1.a && buttonTimer.milliseconds() > 200) {
-                if (robot.GetIntakePower() < -.4) {
-                    robot.intakePower(0);
-                } else {
-                    robot.intakePower(-.5);
-                }
-                buttonTimer.reset();
-            }
-
-            if (gamepad1.b && buttonTimer.milliseconds() > 200) {
-                if (robot.GetShooterPower() > .5) {
-                    robot.shooterPower(0);
-                } else {
-                    // WAS .85
-                    robot.shooterPower(.85);
-                }
-                buttonTimer.reset();
-            }
-            if (gamepad1.y && buttonTimer.milliseconds() > 200) {
-                if (BackOn) {
-                    robot.backStage(0);
-                    BackOn = false;
-                } else {
-                    robot.backStage(1);
-                    BackOn = true;
-                }
-                buttonTimer.reset();
+            if (gamepad1.b) {
+                robot.cyclerPos(.05);
             }
             if (gamepad1.x) {
-                robot.frontStage(1);
-            } else {
-                robot.frontStage(0);
+                robot.cyclerPos(.45);
+            }
+            /// GAMEPAD 2
+
+            if (gamepad2.a && buttonTimer.milliseconds() > 200) {
+                if (robot.GetIntakePower() < -.5) {
+                    robot.intakePower(0);
+                } else {
+                    robot.intakePower(-1);
+                }
+                buttonTimer.reset();
+            }
+
+            if (gamepad2.b) {
+                if (robot.GetLauncherPower() > .4) {
+                    robot.launcherPower(0);
+                } else {
+                    robot.launcherPower(1);
+                }
+                buttonTimer.reset();
+            }
+            if (gamepad2.x){
+                robot.pusherPos(.55);
+            }
+            if (gamepad2.y){
+                // Push up
+                robot.pusherPos(.44);
             }
 
 
-            if (gamepad1.right_bumper) {
-                robot.intakePower(.5);
+            if (gamepad2.dpad_up) {
             }
 
-            if (gamepad1.left_trigger > 0.2) {
-            } else if (gamepad2.left_trigger == 0) {
+            if (gamepad2.dpad_left) {
 
+                // Cycler
             }
+            if (gamepad2.dpad_right) {
+                // Cycler
+            }
+            telemetry.update();
 
         }
+/// END LOOP
+        }
+
+    private void initAprilTag() {
+
+        // Create the AprilTag processor the easy way.
+        aprilTag = AprilTagProcessor.easyCreateWithDefaults();
+
+        // Create the vision portal the easy way.
+            visionPortal = VisionPortal.easyCreateWithDefaults(
+                    hardwareMap.get(WebcamName.class, "Webcam 1"), aprilTag);
 
 
-        telemetry.update();
-        /*
-        robot.telemetryAprilTag();
-        telemetry.addData("Number of AprilTags Detected", currentDetections.size());
-        for (org.firstinspires.ftc.vision.apriltag.AprilTagDetection detection : currentDetections) {
+    }   // end method initAprilTag()
+
+    /**
+     * Add telemetry about AprilTag detections.
+     */
+    private void telemetryAprilTag() {
+
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
+        // Step through the list of detections and display info for each one.
+        for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
@@ -140,9 +196,18 @@ public class Teleop extends LinearOpMode {
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
         telemetry.addLine("RBE = Range, Bearing & Elevation");
 
-         */
+    }   // end method telemetryAprilTag()
+
+
+
+
+
+
+
+
     }
-}
+
+
 
 
         // END OF LOOP
