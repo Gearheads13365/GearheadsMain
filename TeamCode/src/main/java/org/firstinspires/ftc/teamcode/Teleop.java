@@ -91,10 +91,14 @@ public class Teleop extends LinearOpMode {
 
             // GAMEPAD 1 BUTTONS
 
+            if (gamepad1.a){
+                robot.resetEncoders();
+            }
+
             // (1 intake): .25
             ///  2 Intake: .67
             ///  3 intake: 1
-            ///  1 Shoot: .9
+            ///  1 Shoot: .87
             // 2 Shoot: .05
             //  3 Shoot: .45
             /// GAMEPAD 2
@@ -149,8 +153,7 @@ public class Teleop extends LinearOpMode {
 robot.launcherPower(0);
             }
 
-
-
+telemetry.addData("Distance",robot.GetMotorEncoders());
             telemetry.update();
 
         }
@@ -190,10 +193,6 @@ robot.launcherPower(0);
             }
         }   // end for() loop
 
-        // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
 
     }   // end method telemetryAprilTag()
 
